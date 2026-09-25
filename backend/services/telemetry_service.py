@@ -57,9 +57,9 @@ class TelemetryService:
         return "Sonnig"
 
     async def fetch_forecast_live(self):
-        """Fetches live 7-day forecast based on German DWD-ICON open model."""
+        """Fetches live 7-day forecast and 24h hourly forecast based on German DWD-ICON open model."""
         try:
-            url = f"https://api.open-meteo.com/v1/dwd-icon?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,snowfall_sum,uv_index_max,winddirection_10m_dominant,sunshine_duration,precipitation_hours,windspeed_10m_max&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code"
+            url = f"https://api.open-meteo.com/v1/dwd-icon?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,snowfall_sum,uv_index_max,winddirection_10m_dominant,sunshine_duration,precipitation_hours,windspeed_10m_max&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_hours=25"
             req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
             loop = asyncio.get_running_loop()
             res_bytes = await loop.run_in_executor(
@@ -102,6 +102,25 @@ class TelemetryService:
                     "warning_level": risk_level,
                     "warning_text": risk_text
                 }
+
+            # Update 24h hourly forecast
+            hourly = raw.get("hourly", {})
+            h_times = hourly.get("time", [])
+            forecast_24h = []
+            if h_times:
+                for i in range(len(h_times)):
+                    dt_h = datetime.fromisoformat(h_times[i])
+                    time_str = dt_h.strftime("%H:%M")
+                    
+                    forecast_24h.append({
+                        "time": time_str,
+                        "temperature_c": round(hourly.get("temperature_2m", [])[i], 1) if i < len(hourly.get("temperature_2m", [])) else 0,
+                        "precipitation_mm": round(hourly.get("precipitation", [])[i], 1) if i < len(hourly.get("precipitation", [])) else 0,
+                        "wind_speed_kmh": round(hourly.get("wind_speed_10m", [])[i], 1) if i < len(hourly.get("wind_speed_10m", [])) else 0,
+                        "condition": self._code_to_condition(hourly.get("weather_code", [])[i] if i < len(hourly.get("weather_code", [])) else 0),
+                        "weather_code": hourly.get("weather_code", [])[i] if i < len(hourly.get("weather_code", [])) else 0
+                    })
+            self.data["forecast_24h"] = forecast_24h
 
             if times:
                 def safe_get(key: str, idx: int, default: float = 0.0) -> float:

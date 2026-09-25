@@ -44,20 +44,20 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-amber-400" />
-          <h3 className="font-bold text-sm tracking-wide uppercase text-slate-100">S2 Lagebeurteilung & Gefahren</h3>
+          <h3 className="font-bold text-lg tracking-wide uppercase text-slate-100">S2 Lagebeurteilung & Gefahren</h3>
         </div>
         <div>
           {isEditing ? (
             <div className="flex items-center gap-1">
               <button
                 onClick={handleSave}
-                className="flex items-center gap-1 px-2 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-xs font-semibold"
+                className="flex items-center gap-1 px-2 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-base font-semibold"
               >
                 <Check className="w-3 h-3" /> Speichern
               </button>
               <button
                 onClick={handleCancel}
-                className="p-0.5 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded text-xs"
+                className="p-0.5 bg-slate-800 hover:bg-slate-700 text-slate-400 rounded text-base"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -65,7 +65,7 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1 px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs"
+              className="flex items-center gap-1 px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-base"
             >
               <Edit2 className="w-3 h-3" /> Einstufen
             </button>
@@ -78,20 +78,20 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
         {/* Key Operational Numbers */}
         <div className="grid grid-cols-3 gap-1.5 text-center">
           <div className="bg-slate-950/70 p-1.5 rounded border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 block uppercase">Einsätze aktiv</span>
-            <span className={`text-base font-bold font-mono ${activeIncidentsCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+            <span className="text-[14px] text-slate-400 block uppercase">Einsätze aktiv</span>
+            <span className={`text-xl font-bold font-mono ${activeIncidentsCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
               {activeIncidentsCount}
             </span>
           </div>
           <div className="bg-slate-950/70 p-1.5 rounded border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 block uppercase">Kräfte gesamt</span>
-            <span className="text-base font-bold font-mono text-cyan-400 flex items-center justify-center gap-1">
+            <span className="text-[14px] text-slate-400 block uppercase">Kräfte gesamt</span>
+            <span className="text-xl font-bold font-mono text-cyan-400 flex items-center justify-center gap-1">
               <Users className="w-3 h-3 text-cyan-500" /> {totalPersonnel}
             </span>
           </div>
           <div className="bg-slate-950/70 p-1.5 rounded border border-slate-800/80">
-            <span className="text-[10px] text-slate-400 block uppercase">Im Einsatz</span>
-            <span className={`text-base font-bold font-mono ${deployedPersonnel > 0 ? 'text-orange-400' : 'text-slate-400'}`}>
+            <span className="text-[14px] text-slate-400 block uppercase">Im Einsatz</span>
+            <span className={`text-xl font-bold font-mono ${deployedPersonnel > 0 ? 'text-orange-400' : 'text-slate-400'}`}>
               {deployedPersonnel}
             </span>
           </div>
@@ -101,7 +101,7 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
         <div className="space-y-1.5 pt-1">
           {/* Hochwasser */}
           <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-cyan-300 mb-1">
+            <div className="flex items-center gap-1.5 text-base font-semibold text-cyan-300 mb-1">
               <Waves className="w-3.5 h-3.5 text-cyan-400" />
               <span>Hochwasser / Pegel</span>
             </div>
@@ -110,16 +110,16 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
                 type="text"
                 value={formData.hochwasser}
                 onChange={e => setFormData({ ...formData, hochwasser: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-base text-slate-200 focus:outline-none focus:border-cyan-500"
               />
             ) : (
-              <p className="text-xs text-slate-300 font-mono">{state.threat_assessment.hochwasser}</p>
+              <p className="text-base text-slate-300 font-mono">{state.threat_assessment.hochwasser}</p>
             )}
           </div>
 
           {/* Unwetter */}
           <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-yellow-300 mb-1">
+            <div className="flex items-center gap-1.5 text-base font-semibold text-yellow-300 mb-1">
               <CloudLightning className="w-3.5 h-3.5 text-yellow-400" />
               <span>Unwetter / Wetterlage</span>
             </div>
@@ -128,16 +128,16 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
                 type="text"
                 value={formData.unwetter}
                 onChange={e => setFormData({ ...formData, unwetter: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-yellow-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-base text-slate-200 focus:outline-none focus:border-yellow-500"
               />
             ) : (
-              <p className="text-xs text-slate-300 font-mono">{state.threat_assessment.unwetter}</p>
+              <p className="text-base text-slate-300 font-mono">{state.threat_assessment.unwetter}</p>
             )}
           </div>
 
           {/* KRITIS */}
           <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-300 mb-1">
+            <div className="flex items-center gap-1.5 text-base font-semibold text-purple-300 mb-1">
               <Power className="w-3.5 h-3.5 text-purple-400" />
               <span>Kritische Infrastrukturen (KRITIS)</span>
             </div>
@@ -146,25 +146,25 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
                 type="text"
                 value={formData.kritis}
                 onChange={e => setFormData({ ...formData, kritis: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
+                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-base text-slate-200 focus:outline-none focus:border-purple-500"
               />
             ) : (
-              <p className="text-xs text-slate-300 font-mono">{state.threat_assessment.kritis}</p>
+              <p className="text-base text-slate-300 font-mono">{state.threat_assessment.kritis}</p>
             )}
           </div>
 
           {/* Lagebericht Notizen */}
           <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
-            <span className="text-[11px] font-semibold text-slate-400 block mb-1">Lagebericht / Stabs-Notiz</span>
+            <span className="text-[16px] font-semibold text-slate-400 block mb-1">Lagebericht / Stabs-Notiz</span>
             {isEditing ? (
               <textarea
                 rows={2}
                 value={formData.notes}
                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-slate-500 resize-none"
+                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-base text-slate-200 focus:outline-none focus:border-slate-500 resize-none"
               />
             ) : (
-              <p className="text-xs text-slate-400 italic">{state.threat_assessment.notes}</p>
+              <p className="text-base text-slate-400 italic">{state.threat_assessment.notes}</p>
             )}
           </div>
         </div>

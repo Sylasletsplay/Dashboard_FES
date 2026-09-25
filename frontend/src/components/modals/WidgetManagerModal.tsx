@@ -26,8 +26,8 @@ export const WidgetManagerModal: React.FC<WidgetManagerModalProps> = ({
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-cyan-400" />
             <div>
-              <h3 className="font-bold text-sm tracking-wide uppercase">Stabs-Widgets verwalten</h3>
-              <p className="text-[11px] text-slate-400">
+              <h3 className="font-bold text-lg tracking-wide uppercase">Stabs-Widgets verwalten</h3>
+              <p className="text-[16px] text-slate-400">
                 Wählen Sie die im Lagebild aktiven Module aus.
               </p>
             </div>
@@ -61,12 +61,12 @@ export const WidgetManagerModal: React.FC<WidgetManagerModalProps> = ({
                   </button>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs">{widget.title}</span>
-                      <span className="text-[9px] font-mono bg-slate-800 text-cyan-300 px-1.5 py-0.2 rounded border border-slate-700">
+                      <span className="font-bold text-base">{widget.title}</span>
+                      <span className="text-[13px] font-mono bg-slate-800 text-cyan-300 px-1.5 py-0.2 rounded border border-slate-700">
                         {widget.category}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{widget.description}</p>
+                    <p className="text-[16px] text-slate-400 mt-0.5">{widget.description}</p>
                   </div>
                 </div>
               </div>
@@ -75,7 +75,7 @@ export const WidgetManagerModal: React.FC<WidgetManagerModalProps> = ({
         </div>
 
         {/* Developer / Extensibility hint */}
-        <div className="mt-4 p-2.5 bg-slate-950/70 border border-slate-800 rounded text-[11px] text-slate-400 flex items-start gap-2">
+        <div className="mt-4 p-2.5 bg-slate-950/70 border border-slate-800 rounded text-[16px] text-slate-400 flex items-start gap-2">
           <PlusCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
           <div>
             <strong className="text-slate-300">Erweiterbarkeit:</strong> Neue Widgets können in <code className="text-cyan-300 font-mono">src/widgets/</code> erstellt und mit einem Befehl in <code className="text-cyan-300 font-mono">registry.ts</code> registriert werden. Sie stehen dem Führungsstab sofort zur Verfügung.
@@ -85,7 +85,7 @@ export const WidgetManagerModal: React.FC<WidgetManagerModalProps> = ({
         <div className="mt-4 pt-3 border-t border-slate-800 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded text-xs transition-colors"
+            className="px-4 py-1.5 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded text-base transition-colors"
           >
             Übernehmen
           </button>

@@ -18,7 +18,7 @@ export const QuickActionBar: React.FC<QuickActionBarProps> = ({
   const activeIncidentsCount = state.incidents.filter(i => i.status !== 'Erledigt').length;
 
   return (
-    <footer className="h-10 bg-slate-950 border-t border-slate-800 px-3 flex items-center justify-between shrink-0 select-none text-xs">
+    <footer className="h-10 bg-slate-950 border-t border-slate-800 px-3 flex items-center justify-between shrink-0 select-none text-base">
       {/* Left: Quick Action Status Buttons */}
       <div className="flex items-center gap-2">
         <button

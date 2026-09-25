@@ -44,11 +44,11 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
       >
         {hasData ? (
           <>
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full">
+            <span className="text-[16px] font-bold text-slate-500 uppercase tracking-widest mb-1 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-1 rounded-full">
               Gesamt Einsätze
             </span>
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black font-mono text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]">
+              <span className="text-7xl font-black font-mono text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)]">
                 {telemetry.mission_count_all || 0}
               </span>
             </div>
@@ -102,7 +102,7 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
                         <foreignObject x={x} y={y} width={width} height={height} className="pointer-events-none">
                           <div className="w-full h-full flex flex-col items-center justify-center text-center p-1 overflow-hidden">
                             <span 
-                              className="text-[9px] font-bold text-white drop-shadow-md leading-tight break-words max-w-full"
+                              className="text-[13px] font-bold text-white drop-shadow-md leading-tight break-words max-w-full"
                               title={labelName}
                             >
                               {labelName}

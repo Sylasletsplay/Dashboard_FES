@@ -44,16 +44,16 @@ export function App() {
       {/* Header */}
       <div className="flex-none p-3 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold font-mono text-slate-100 uppercase tracking-widest">
+          <h1 className="text-3xl font-bold font-mono text-slate-100 uppercase tracking-widest">
             KatS-Dashboard <span className="text-cyan-400">Berlin</span>
           </h1>
           <div className="h-6 w-px bg-slate-700"></div>
-          <div className="flex items-center gap-2 text-sm text-slate-400">
+          <div className="flex items-center gap-2 text-lg text-slate-400">
              <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`}></div>
              {isLive ? 'LIVE' : 'OFFLINE'}
           </div>
         </div>
-        <div className="text-sm font-mono text-slate-400">
+        <div className="text-lg font-mono text-slate-400">
            Stand: {telemetry.lastUpdate ? telemetry.lastUpdate.toLocaleTimeString('de-DE') : '--:--:--'}
         </div>
       </div>

@@ -40,7 +40,7 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-amber-400" />
-            <h3 className="font-bold text-sm tracking-wide uppercase">
+            <h3 className="font-bold text-lg tracking-wide uppercase">
               Detailprognose: {day.weekday}, {day.date.split('-').reverse().join('.')}
             </h3>
           </div>
@@ -58,10 +58,10 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
             {getWeatherIcon(day.weather_code)}
           </div>
           <div>
-            <div className="text-2xl font-black font-mono tracking-tight">
-              {Math.round(day.temp_max)}°C <span className="text-slate-500 text-sm font-normal">Max</span>
+            <div className="text-4xl font-black font-mono tracking-tight">
+              {Math.round(day.temp_max)}°C <span className="text-slate-500 text-lg font-normal">Max</span>
             </div>
-            <div className="text-sm font-bold text-slate-300">
+            <div className="text-lg font-bold text-slate-300">
               {day.condition}
             </div>
           </div>
@@ -70,81 +70,81 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+              <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Sun className="w-3.5 h-3.5 text-amber-500" /> Min Temp
               </span>
-              <span className="font-mono text-cyan-400 font-bold text-sm">{Math.round(day.temp_min)}°C</span>
+              <span className="font-mono text-cyan-400 font-bold text-lg">{Math.round(day.temp_min)}°C</span>
             </div>
 
             <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+              <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Droplets className="w-3.5 h-3.5 text-blue-400" /> Regenrisiko
               </span>
-              <span className="font-mono text-blue-300 font-bold text-sm">{day.precipitation_prob}%</span>
+              <span className="font-mono text-blue-300 font-bold text-lg">{day.precipitation_prob}%</span>
             </div>
 
             <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+              <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <CloudRain className="w-3.5 h-3.5 text-blue-500" /> Niederschlag
               </span>
-              <span className="font-mono text-slate-200 font-bold text-sm">
+              <span className="font-mono text-slate-200 font-bold text-lg">
                 {day.precipitation_sum !== undefined ? day.precipitation_sum : '--'} mm
                 {day.snowfall_sum ? ` (${day.snowfall_sum} cm ❄)` : ''}
               </span>
             </div>
 
             <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+              <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Clock className="w-3.5 h-3.5 text-blue-300" /> Regendauer
               </span>
-              <span className="font-mono text-slate-200 font-bold text-sm">
+              <span className="font-mono text-slate-200 font-bold text-lg">
                 {day.precipitation_hours !== undefined ? day.precipitation_hours : '--'} h
               </span>
             </div>
 
             <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+              <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Wind className="w-3.5 h-3.5 text-slate-400" /> Grundwind
               </span>
-              <span className="font-mono font-bold text-sm text-slate-300">
+              <span className="font-mono font-bold text-lg text-slate-300">
                 {day.wind_speed_kmh !== undefined ? Math.round(day.wind_speed_kmh) : '--'} km/h
               </span>
             </div>
 
             <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+              <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Wind className="w-3.5 h-3.5 text-slate-300" /> Spitzenböen
               </span>
-              <span className={`font-mono font-bold text-sm ${day.wind_gusts_kmh > 45 ? 'text-red-400' : 'text-slate-300'}`}>
+              <span className={`font-mono font-bold text-lg ${day.wind_gusts_kmh > 45 ? 'text-red-400' : 'text-slate-300'}`}>
                 {Math.round(day.wind_gusts_kmh)} km/h {day.winddirection ? `(${day.winddirection})` : ''}
               </span>
             </div>
 
             <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+              <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Sun className="w-3.5 h-3.5 text-yellow-500" /> Sonne
               </span>
-              <span className="font-mono text-yellow-400 font-bold text-sm">
+              <span className="font-mono text-yellow-400 font-bold text-lg">
                 {day.sunshine_hours !== undefined ? `${day.sunshine_hours}h` : '--'}
               </span>
             </div>
 
             <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
-              <span className="text-slate-400 font-semibold text-[10px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
+              <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <CloudLightning className="w-3.5 h-3.5 text-purple-400" /> UV Index
               </span>
-              <span className={`font-mono font-bold text-sm ${(day.uv_index || 0) > 6 ? 'text-red-400' : 'text-purple-300'}`}>
+              <span className={`font-mono font-bold text-lg ${(day.uv_index || 0) > 6 ? 'text-red-400' : 'text-purple-300'}`}>
                 {day.uv_index !== undefined ? day.uv_index : '--'}
               </span>
             </div>
           </div>
 
           <div className={`mt-2 rounded p-3 border flex justify-between items-center ${isSevere ? 'bg-red-950/30 border-red-900/50' : 'bg-slate-950/70 border-slate-800/50'}`}>
-            <span className="text-slate-400 font-semibold text-xs flex items-center gap-2">
+            <span className="text-slate-400 font-semibold text-base flex items-center gap-2">
               <AlertTriangle className={`w-4 h-4 ${isSevere ? 'text-red-500' : 'text-emerald-500'}`} /> 
               Gefahrenpotential
             </span>
-            <span className={`font-mono font-bold text-xs uppercase px-2 py-0.5 rounded border ${isSevere ? 'bg-red-950 text-red-400 border-red-800' : 'bg-emerald-950/50 text-emerald-400 border-emerald-800'}`}>
+            <span className={`font-mono font-bold text-base uppercase px-2 py-0.5 rounded border ${isSevere ? 'bg-red-950 text-red-400 border-red-800' : 'bg-emerald-950/50 text-emerald-400 border-emerald-800'}`}>
               {day.warning_risk}
             </span>
           </div>
@@ -153,7 +153,7 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-bold text-xs transition-colors"
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded font-bold text-base transition-colors"
           >
             Schließen
           </button>
@@ -203,7 +203,7 @@ export const SevenDayForecastWidget: React.FC<WidgetProps> = ({ telemetry }) => 
       <div className="flex items-center justify-between p-2 border-b border-slate-800/80 bg-slate-900/50">
         <div className="flex items-center gap-1.5">
           <Calendar className="w-3.5 h-3.5 text-amber-400" />
-          <h3 className="font-bold text-[10px] uppercase tracking-wider font-mono text-slate-100">
+          <h3 className="font-bold text-[14px] uppercase tracking-wider font-mono text-slate-100">
             Wetter DWD-ICON
           </h3>
         </div>
@@ -229,10 +229,10 @@ export const SevenDayForecastWidget: React.FC<WidgetProps> = ({ telemetry }) => 
               onClick={() => setSelectedDayIndex(idx)}
             >
               <div className="w-full flex justify-between items-center px-2 mb-1">
-                <span className={`text-xs font-bold font-mono ${isToday ? 'text-amber-400' : 'text-slate-200'}`}>
+                <span className={`text-base font-bold font-mono ${isToday ? 'text-amber-400' : 'text-slate-200'}`}>
                   {day.weekday}
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="text-[14px] text-slate-500 font-mono">
                   {day.date.includes('-') ? day.date.split('-').slice(1).join('.') : day.date}
                 </span>
               </div>
@@ -240,12 +240,12 @@ export const SevenDayForecastWidget: React.FC<WidgetProps> = ({ telemetry }) => 
               <div className="flex items-center gap-4 my-1">
                 {getWeatherIcon(day.weather_code)}
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold font-mono text-slate-100">{Math.round(day.temp_max)}°C</span>
-                  <span className="text-[10px] text-slate-400 truncate max-w-[80px]">{day.condition}</span>
+                  <span className="text-lg font-bold font-mono text-slate-100">{Math.round(day.temp_max)}°C</span>
+                  <span className="text-[14px] text-slate-400 truncate max-w-[80px]">{day.condition}</span>
                 </div>
               </div>
               
-              <div className="text-[9px] text-slate-500 mt-1 flex items-center gap-1">
+              <div className="text-[13px] text-slate-500 mt-1 flex items-center gap-1">
                 <Info className="w-2.5 h-2.5"/> Details
               </div>
             </div>

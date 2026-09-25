@@ -74,14 +74,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="font-extrabold text-sm tracking-wider uppercase text-slate-100 font-mono">
+              <h1 className="font-extrabold text-lg tracking-wider uppercase text-slate-100 font-mono">
                 KatS Führungsstab
               </h1>
-              <span className="text-[10px] bg-slate-800 text-slate-400 font-mono px-1.5 py-0.5 rounded">
+              <span className="text-[14px] bg-slate-800 text-slate-400 font-mono px-1.5 py-0.5 rounded">
                 DV 100
               </span>
             </div>
-            <div className="text-[10px] text-slate-400 font-medium">
+            <div className="text-[14px] text-slate-400 font-medium">
               Lage- & Stabszentrum
             </div>
           </div>
@@ -90,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Alarmstufe Badge (Interactive) */}
         <button
           onClick={onOpenAlarmModal}
-          className={`px-2.5 py-1 rounded border font-mono font-bold text-xs flex items-center gap-1.5 shadow transition-all hover:scale-105 ${getAlarmBadgeStyle(
+          className={`px-2.5 py-1 rounded border font-mono font-bold text-base flex items-center gap-1.5 shadow transition-all hover:scale-105 ${getAlarmBadgeStyle(
             state.alarm_level
           )}`}
           title="KatS-Alarmstufe ändern"
@@ -103,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Center: Live Telemetry Indicator */}
       <div className="flex items-center gap-2">
         <div
-          className={`px-2.5 py-1 rounded-full text-xs font-mono font-semibold flex items-center gap-2 border transition-all ${
+          className={`px-2.5 py-1 rounded-full text-base font-mono font-semibold flex items-center gap-2 border transition-all ${
             telemetry.isConnected && telemetry.isLiveFeed
               ? 'bg-emerald-950/80 text-emerald-300 border-emerald-600'
               : 'bg-red-950/80 text-red-300 border-red-600 animate-pulse'
@@ -129,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* City Selector */}
         {onChangeCity && telemetry.live && (
           <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded px-2 py-0.5 focus-within:border-slate-500 transition-colors">
-            <span className="text-[10px] text-slate-400 font-mono">STADT:</span>
+            <span className="text-[14px] text-slate-400 font-mono">STADT:</span>
             <input
               key={telemetry.live.current_city}
               type="text"
@@ -143,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
                   }
                 }
               }}
-              className="bg-transparent text-slate-200 text-xs font-bold outline-none w-32 placeholder-slate-600"
+              className="bg-transparent text-slate-200 text-base font-bold outline-none w-32 placeholder-slate-600"
               placeholder="Stadt..."
               title="Stadt eingeben und Enter drücken"
             />
@@ -151,14 +151,14 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Operational Clocks */}
-        <div className="flex items-center gap-2 bg-slate-900 px-2.5 py-1 rounded border border-slate-800 font-mono text-xs">
+        <div className="flex items-center gap-2 bg-slate-900 px-2.5 py-1 rounded border border-slate-800 font-mono text-base">
           <div>
-            <span className="text-[10px] text-slate-500 mr-1">LOKAL</span>
+            <span className="text-[14px] text-slate-500 mr-1">LOKAL</span>
             <strong className="text-slate-100 font-bold">{localString}</strong>
           </div>
           <div className="text-slate-700">|</div>
           <div>
-            <span className="text-[10px] text-slate-500 mr-1">ZULU</span>
+            <span className="text-[14px] text-slate-500 mr-1">ZULU</span>
             <strong className="text-cyan-400 font-bold">{zuluString}</strong>
           </div>
         </div>

@@ -37,14 +37,14 @@ export const NewLogEntryModal: React.FC<NewLogEntryModalProps> = ({ isOpen, onCl
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-purple-400" />
-            <h3 className="font-bold text-sm tracking-wide uppercase">Neuer Tagebucheintrag (ETB)</h3>
+            <h3 className="font-bold text-lg tracking-wide uppercase">Neuer Tagebucheintrag (ETB)</h3>
           </div>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-200">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+        <form onSubmit={handleSubmit} className="space-y-3 text-base">
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-slate-400 mb-1 font-semibold">Absender (Von) *</label>

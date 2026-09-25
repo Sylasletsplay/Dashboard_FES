@@ -77,7 +77,7 @@ export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels,
           </div>
           <input
             type="text"
-            className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-lg text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
             placeholder="Pegel suchen..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
@@ -87,7 +87,7 @@ export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels,
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-slate-400" />
           <select
-            className="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="flex-1 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1.5 text-base text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
             value={filterMode}
             onChange={e => setFilterMode(e.target.value)}
           >
@@ -111,7 +111,7 @@ export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels,
                   className="flex items-center justify-between cursor-pointer group"
                   onClick={() => toggleExpand(pegel.station)}
                 >
-                  <span className="font-bold text-sm text-slate-800 dark:text-slate-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{pegel.station}</span>
+                  <span className="font-bold text-lg text-slate-800 dark:text-slate-200 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">{pegel.station}</span>
                   <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
                     {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
@@ -119,12 +119,12 @@ export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels,
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-baseline gap-1">
-                    <span className="font-mono text-xl font-bold text-cyan-600 dark:text-cyan-300">
+                    <span className="font-mono text-3xl font-bold text-cyan-600 dark:text-cyan-300">
                       {pegel.level_cm}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">cm</span>
+                    <span className="text-base text-slate-500 dark:text-slate-400">cm</span>
                   </div>
-                  <div className="flex items-center gap-1 text-xs font-mono">
+                  <div className="flex items-center gap-1 text-base font-mono">
                     {getTrendIcon(pegel.trend)}
                     <span className="text-slate-700 dark:text-slate-300">{pegel.delta_1h}</span>
                   </div>
@@ -136,7 +136,7 @@ export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels,
                      
                      {/* Show characteristic values for reference if available */}
                      {pegel.char_vals && Object.keys(pegel.char_vals).length > 0 && (
-                       <div className="mt-3 grid grid-cols-3 gap-1 text-[10px] text-slate-500 font-mono bg-slate-50 dark:bg-slate-950 p-2 rounded">
+                       <div className="mt-3 grid grid-cols-3 gap-1 text-[14px] text-slate-500 font-mono bg-slate-50 dark:bg-slate-950 p-2 rounded">
                           {pegel.char_vals['NNW'] && <div>NNW: {pegel.char_vals['NNW']}</div>}
                           {pegel.char_vals['MNW'] && <div>MNW: {pegel.char_vals['MNW']}</div>}
                           {pegel.char_vals['MW'] && <div>MW: {pegel.char_vals['MW']}</div>}
@@ -150,7 +150,7 @@ export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels,
             );
           })
         ) : (
-          <div className="flex-1 flex items-center justify-center text-slate-500 p-4 text-sm text-center">
+          <div className="flex-1 flex items-center justify-center text-slate-500 p-4 text-lg text-center">
             Keine Pegel gefunden, die den Filterkriterien entsprechen.
           </div>
         )}

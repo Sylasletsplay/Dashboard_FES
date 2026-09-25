@@ -53,7 +53,7 @@ export const AlarmLevelModal: React.FC<AlarmLevelModalProps> = ({
         <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-400" />
-            <h3 className="font-bold text-sm tracking-wide uppercase">Katastrophenschutz-Alarmstufe festlegen</h3>
+            <h3 className="font-bold text-lg tracking-wide uppercase">Katastrophenschutz-Alarmstufe festlegen</h3>
           </div>
           <button 
             type="button" 
@@ -85,16 +85,16 @@ export const AlarmLevelModal: React.FC<AlarmLevelModalProps> = ({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs uppercase tracking-wide font-mono">
+                    <span className="font-bold text-base uppercase tracking-wide font-mono">
                       {lvl.title}
                     </span>
                     {isCurrent && (
-                      <span className="text-[10px] bg-white/20 text-white font-mono px-2 py-0.5 rounded font-bold border border-white/30">
+                      <span className="text-[14px] bg-white/20 text-white font-mono px-2 py-0.5 rounded font-bold border border-white/30">
                         AKTIV
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                  <p className="text-[16px] text-slate-300 mt-1 leading-relaxed">
                     {lvl.subtitle}
                   </p>
                 </div>
@@ -107,7 +107,7 @@ export const AlarmLevelModal: React.FC<AlarmLevelModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-semibold"
+            className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-base font-semibold"
           >
             Schließen
           </button>

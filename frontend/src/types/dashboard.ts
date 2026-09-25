@@ -96,6 +96,15 @@ export interface DayForecast {
   sunshine_hours?: number;
 }
 
+export interface HourlyForecast {
+  time: string;
+  temperature_c: number;
+  precipitation_mm: number;
+  wind_speed_kmh: number;
+  condition: string;
+  weather_code: number;
+}
+
 export interface LiveTelemetry {
   last_updated: string;
   current_city?: string;
@@ -108,6 +117,7 @@ export interface LiveTelemetry {
   hauptbeschwerden?: { name: string; value: number }[];
   weather: WeatherTelemetry;
   forecast_7days?: DayForecast[];
+  forecast_24h?: HourlyForecast[];
   kritis: KritisTelemetry;
 }
 
