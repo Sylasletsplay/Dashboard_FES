@@ -1,0 +1,112 @@
+{
+  "alarm_level": 0,
+  "alarm_title": "Stufe 0 - Normalbetrieb",
+  "threat_assessment": {
+    "hochwasser": "Keine Hochwassergefahr (Normal)",
+    "unwetter": "Keine Unwetterwarnung aktiv",
+    "kritis": "Regulärer Netz- & Versorgungsbetrieb",
+    "notes": "Lage ruhig. Keine besonderen Vorkommnisse gemeldet. Regelhafter Stabsdienst-Bereitschaftsmodus."
+  },
+  "incidents": [],
+  "units": [
+    {
+      "id": "u-1",
+      "callsign": "Kater 12/1",
+      "name": "Einsatzleitwagen 2 (ELW 2)",
+      "org": "KatS-Führungsstaffel",
+      "status": 2,
+      "strength": "1/2/3/6",
+      "sector": "Stabsbereich",
+      "location": [
+        48.573,
+        13.461
+      ]
+    },
+    {
+      "id": "u-2",
+      "callsign": "Florian 1/46-1",
+      "name": "Hilfeleistungslöschgruppenfahrzeug (HLF 20)",
+      "org": "Feuerwehr",
+      "status": 2,
+      "strength": "0/1/8/9",
+      "sector": "Wache 1",
+      "location": [
+        48.568,
+        13.445
+      ]
+    },
+    {
+      "id": "u-3",
+      "callsign": "Heros 21/10",
+      "name": "Gerätekraftwagen 1 (GKW 1)",
+      "org": "THW",
+      "status": 2,
+      "strength": "0/1/8/9",
+      "sector": "Ortsverband",
+      "location": [
+        48.581,
+        13.483
+      ]
+    },
+    {
+      "id": "u-4",
+      "callsign": "Rotkreuz 71/1",
+      "name": "Rettungstransportwagen (RTW)",
+      "org": "Rettungsdienst",
+      "status": 2,
+      "strength": "0/1/1/2",
+      "sector": "Rettungswache",
+      "location": [
+        48.569,
+        13.454
+      ]
+    },
+    {
+      "id": "u-5",
+      "callsign": "Pelikan 91/1",
+      "name": "Gerätewagen Wasserrettung (GW-W)",
+      "org": "DLRG",
+      "status": 2,
+      "strength": "0/1/4/5",
+      "sector": "Wasserrettungsstation",
+      "location": [
+        48.576,
+        13.472
+      ]
+    }
+  ],
+  "etb": [
+    {
+      "id": 1,
+      "timestamp": "2026-09-21 08:39:57",
+      "sender": "S1/S2",
+      "recipient": "Führungsstab",
+      "content": "KatS-Stabsdashboard initialisiert. Stabsdienst aufgenommen.",
+      "action": "Regulärer Dienstbetrieb."
+    },
+    {
+      "id": 2,
+      "timestamp": "2026-09-21 10:13:21",
+      "sender": "Kater 12/1",
+      "recipient": "S3 Einsatz",
+      "content": "FMS Statuswechsel: Kater 12/1 von Status 2 auf Status 3",
+      "action": "Status im System vermerkt."
+    },
+    {
+      "id": 3,
+      "timestamp": "2026-09-21 10:13:22",
+      "sender": "Kater 12/1",
+      "recipient": "S3 Einsatz",
+      "content": "FMS Statuswechsel: Kater 12/1 von Status 3 auf Status 2",
+      "action": "Status im System vermerkt."
+    },
+    {
+      "sender": "S3 Einsatz",
+      "recipient": "Führungsstab",
+      "content": "test",
+      "action": "",
+      "id": 4,
+      "timestamp": "2026-09-21 10:14:11"
+    }
+  ]
+}

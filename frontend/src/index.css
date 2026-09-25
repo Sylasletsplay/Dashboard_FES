@@ -1,0 +1,214 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow: hidden !important;
+  }
+}
+
+/* Reusable Theme-Aware Classes for Dark / Light mode */
+.kats-panel {
+  @apply bg-slate-900/95 border border-slate-800 text-slate-100 dark:bg-slate-900/95 dark:border-slate-800 dark:text-slate-100;
+}
+
+.light .kats-panel {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+}
+
+.kats-panel-sub {
+  @apply bg-slate-950/70 border border-slate-800/80;
+}
+
+.light .kats-panel-sub {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Global Light Mode Overrides for Hardcoded Slate Classes */
+.light .text-slate-100,
+.light .text-slate-200,
+.light .text-slate-300 {
+  color: #1e293b !important;
+}
+
+.light .text-slate-400,
+.light .text-slate-500 {
+  color: #475569 !important;
+}
+
+.light .bg-slate-900,
+.light .bg-slate-950,
+.light .bg-slate-800 {
+  background-color: #f8fafc !important;
+}
+
+.light .bg-slate-900\/50,
+.light .bg-slate-900\/30,
+.light .bg-slate-900\/80,
+.light .bg-slate-900\/90,
+.light .bg-slate-950\/70,
+.light .bg-slate-950\/60,
+.light .bg-slate-950\/50,
+.light .bg-slate-800\/30,
+.light .bg-slate-800\/80 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .border-slate-800,
+.light .border-slate-700,
+.light .border-slate-800\/80,
+.light .border-slate-800\/50,
+.light .border-slate-800\/60,
+.light .border-slate-800\/90,
+.light .border-slate-700\/50 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Light Mode Overrides for Hover States */
+.light .hover\:bg-slate-800:hover,
+.light .hover\:bg-slate-700:hover,
+.light .hover\:bg-slate-800\/30:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.light .hover\:border-slate-700:hover,
+.light .hover\:border-slate-600:hover {
+  border-color: #cbd5e1 !important;
+}
+
+/* Light Mode Overrides for Colored Status Badges & Accents */
+.light .bg-emerald-950, .light .bg-emerald-950\/50, .light .bg-emerald-950\/60, .light .bg-emerald-950\/80 {
+  background-color: #d1fae5 !important;
+  color: #047857 !important;
+  border-color: #34d399 !important;
+}
+.light .text-emerald-400, .light .text-emerald-300 { color: #059669 !important; }
+.light .border-emerald-800, .light .border-emerald-800\/50 { border-color: #34d399 !important; }
+
+.light .bg-red-950, .light .bg-red-950\/30, .light .bg-red-950\/50, .light .bg-red-950\/60, .light .bg-red-950\/80 {
+  background-color: #fee2e2 !important;
+  color: #b91c1c !important;
+  border-color: #f87171 !important;
+}
+.light .text-red-400, .light .text-red-500, .light .text-red-300 { color: #dc2626 !important; }
+.light .border-red-900\/50, .light .border-red-800, .light .border-red-800\/50 { border-color: #f87171 !important; }
+.light .bg-red-500 { background-color: #ef4444 !important; color: white !important; }
+
+.light .bg-amber-950, .light .bg-amber-950\/50, .light .bg-amber-950\/60, .light .bg-amber-950\/80,
+.light .bg-yellow-950, .light .bg-yellow-950\/50, .light .bg-yellow-950\/60, .light .bg-yellow-950\/80 {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #fbbf24 !important;
+}
+.light .text-amber-400, .light .text-amber-300, .light .text-yellow-400, .light .text-yellow-300 { color: #d97706 !important; }
+.light .border-amber-800, .light .border-yellow-800 { border-color: #fbbf24 !important; }
+.light .bg-amber-400 { background-color: #f59e0b !important; }
+
+.light .bg-cyan-950, .light .bg-cyan-950\/50, .light .bg-cyan-950\/60, .light .bg-cyan-950\/80,
+.light .bg-sky-950, .light .bg-sky-950\/50, .light .bg-sky-950\/60, .light .bg-sky-950\/80 {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #38bdf8 !important;
+}
+.light .text-cyan-400, .light .text-cyan-300, .light .text-sky-400, .light .text-sky-300 { color: #0284c7 !important; }
+.light .border-cyan-800, .light .border-sky-800 { border-color: #38bdf8 !important; }
+.light .bg-cyan-500 { background-color: #0ea5e9 !important; }
+
+.light .bg-purple-950, .light .bg-purple-950\/50, .light .bg-purple-950\/60, .light .bg-purple-950\/80 {
+  background-color: #f3e8ff !important;
+  color: #7e22ce !important;
+  border-color: #c084fc !important;
+}
+.light .text-purple-400, .light .text-purple-300 { color: #9333ea !important; }
+.light .border-purple-800 { border-color: #c084fc !important; }
+
+.light .bg-orange-950, .light .bg-orange-950\/50, .light .bg-orange-950\/60, .light .bg-orange-950\/80 {
+  background-color: #ffedd5 !important;
+  color: #c2410c !important;
+  border-color: #fb923c !important;
+}
+.light .text-orange-400, .light .text-orange-300 { color: #ea580c !important; }
+.light .border-orange-800 { border-color: #fb923c !important; }
+
+/* Custom Tactical Scrollbars for internal sub-panels */
+.custom-scroll::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.2);
+  border-radius: 3px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border-radius: 3px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8);
+}
+
+/* Leaflet Map overrides for tactical dark / light mode */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #0b0f19 !important;
+  font-family: inherit !important;
+}
+
+.dark .leaflet-tile {
+  filter: brightness(0.65) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+.light .leaflet-tile {
+  filter: contrast(1.05) saturate(1.1);
+}
+
+.leaflet-popup-content-wrapper {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.light .leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-popup-tip {
+  background: #0f172a !important;
+}
+
+.light .leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+/* Pulse animation for live indicators */
+@keyframes pulse-fast {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
