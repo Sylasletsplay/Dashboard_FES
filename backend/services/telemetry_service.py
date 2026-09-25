@@ -19,6 +19,12 @@ class TelemetryService:
         self.lon = 13.40
         self.stations = []
         
+        self._manual_trigger = asyncio.Event()
+        self.get_active_clients = None
+
+    def trigger_update(self):
+        self._manual_trigger.set()
+        
         self.forecast_cooldown = 900
         self.pegel_cooldown = 0
         self.fire_cooldown = 0
@@ -418,28 +424,32 @@ class TelemetryService:
         # dynamically fetch stations based on lat/lon
         await self.init_stations()
         
-        # fetch everything once on start immediately
-        await asyncio.gather(
-            self.fetch_pegel_live(),
-            self.fetch_forecast_live(),
-            self.fetch_fire_data_live(),
-            return_exceptions=True
-        )
-
         while True:
-            try:
-                await asyncio.gather(
-                    self.fetch_pegel_live(),
-                    self.fetch_forecast_live(),
-                    self.fetch_fire_data_live(),
-                    return_exceptions=True
-                )
-                self.data["last_updated"] = datetime.now().isoformat()
-                if self.broadcast_callback:
-                    self.broadcast_callback("TELEMETRY_UPDATED", self.data)
-            except Exception as e:
-                print(f"Telemetry loop error: {e}")
-            await asyncio.sleep(60)
+            active = self.get_active_clients() if self.get_active_clients else 1
+            
+            if active > 0:
+                try:
+                    await asyncio.gather(
+                        self.fetch_pegel_live(),
+                        self.fetch_forecast_live(),
+                        self.fetch_fire_data_live(),
+                        return_exceptions=True
+                    )
+                    self.data["last_updated"] = datetime.now().isoformat()
+                    if self.broadcast_callback:
+                        self.broadcast_callback("TELEMETRY_UPDATED", self.data)
+                except Exception as e:
+                    print(f"Telemetry loop error: {e}")
+                
+                try:
+                    await asyncio.wait_for(self._manual_trigger.wait(), timeout=60.0)
+                    self._manual_trigger.clear()
+                except asyncio.TimeoutError:
+                    pass
+            else:
+                await self._manual_trigger.wait()
+                self._manual_trigger.clear()
+
 
     def set_city(self, city: str):
         pass

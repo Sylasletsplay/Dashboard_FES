@@ -34,7 +34,9 @@ class ConnectionManager:
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
+        was_empty = len(self.active_connections) == 0
         self.active_connections.append(websocket)
+        
         # Send initial snapshot immediately upon connect
         initial_payload = {
             "type": "INITIAL_STATE",
@@ -43,6 +45,9 @@ class ConnectionManager:
             "live_telemetry": telemetry_service.get_telemetry_data()
         }
         await websocket.send_text(json.dumps(initial_payload))
+        
+        if was_empty:
+            telemetry_service.trigger_update()
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
@@ -72,6 +77,7 @@ ws_manager = ConnectionManager()
 # Hook state_manager and telemetry_service broadcasts into WebSocket manager
 state_manager.set_broadcast_callback(ws_manager.sync_broadcast)
 telemetry_service.broadcast_callback = ws_manager.sync_broadcast
+telemetry_service.get_active_clients = lambda: len(ws_manager.active_connections)
 
 @app.on_event("startup")
 async def startup_event():
