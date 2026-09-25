@@ -69,6 +69,7 @@ export interface WeatherTelemetry {
   air_pressure_hpa: number;
   warning_level: number;
   warning_text: string;
+  error?: string | null;
 }
 
 export interface KritisTelemetry {
@@ -116,6 +117,8 @@ export interface LiveTelemetry {
   mission_count_all?: number;
   hauptbeschwerden?: { name: string; value: number }[];
   weather: WeatherTelemetry;
+  water_levels_error?: string | null;
+  fire_data_error?: string | null;
   forecast_7days?: DayForecast[];
   forecast_24h?: HourlyForecast[];
   kritis: KritisTelemetry;

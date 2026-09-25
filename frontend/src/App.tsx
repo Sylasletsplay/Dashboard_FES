@@ -64,17 +64,30 @@ export function App() {
           
           {/* Left Column: Water Levels */}
           <div className="col-span-1 h-full min-h-0 overflow-hidden">
-            <WaterLevelWidget waterLevels={liveData.water_levels} theme={theme} />
+            <WaterLevelWidget 
+              waterLevels={liveData.water_levels} 
+              theme={theme} 
+              error={liveData.water_levels_error}
+              onRefresh={() => sendEvent('REFRESH_TELEMETRY', { widget: 'pegel' })}
+            />
           </div>
 
           {/* Middle Column: Fire Operations */}
           <div className="col-span-1 h-full min-h-0 overflow-hidden">
-             <FireOperationsWidget telemetry={liveData} />
+             <FireOperationsWidget 
+               telemetry={liveData} 
+               error={liveData.fire_data_error}
+               onRefresh={() => sendEvent('REFRESH_TELEMETRY', { widget: 'fire' })}
+             />
           </div>
 
           {/* Right Column: Weather */}
           <div className="col-span-1 h-full min-h-0 overflow-hidden">
-             <WeatherWidget telemetry={liveData} />
+             <WeatherWidget 
+               telemetry={liveData} 
+               error={liveData.weather?.error}
+               onRefresh={() => sendEvent('REFRESH_TELEMETRY', { widget: 'weather' })}
+             />
           </div>
 
         </div>

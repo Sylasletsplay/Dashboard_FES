@@ -1,15 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { WidgetContainer } from '../components/WidgetContainer';
-import { Waves, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Search, Filter } from 'lucide-react';
+import { Waves, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Search, Filter, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { RiverLevelChart } from '../components/charts/RiverLevelChart';
 import { WaterLevelReading } from '../types/dashboard';
 
 interface WaterLevelWidgetProps {
   waterLevels: WaterLevelReading[];
   theme?: any;
+  error?: string | null;
+  onRefresh?: () => void;
 }
 
-export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels, theme }) => {
+export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels, theme, error, onRefresh }) => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<string>('ALL');
@@ -69,7 +71,20 @@ export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels,
       iconColor="text-cyan-500"
       className="h-full"
       contentClassName="flex flex-col gap-3 overflow-y-auto custom-scroll"
+      headerRight={
+        onRefresh && (
+          <button onClick={onRefresh} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500" title="Aktualisieren">
+            <RefreshCcw className="w-4 h-4" />
+          </button>
+        )
+      }
     >
+      {error && (
+        <div className="bg-red-950/30 border border-red-800 text-red-300 p-3 rounded-lg flex items-center gap-2 mb-1 shrink-0">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-medium">{error}</span>
+        </div>
+      )}
       <div className="flex flex-col gap-2 mb-1">
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">

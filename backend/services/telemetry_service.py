@@ -1,4 +1,5 @@
 import asyncio
+import time
 import json
 import ssl
 import urllib.request
@@ -17,6 +18,13 @@ class TelemetryService:
         self.lat = 52.52
         self.lon = 13.40
         self.stations = []
+        
+        self.forecast_cooldown = 900
+        self.pegel_cooldown = 0
+        self.fire_cooldown = 0
+        self._last_forecast_fetch = 0
+        self._last_pegel_fetch = 0
+        self._last_fire_fetch = 0
         
         # Initial cached telemetry state
         self.data: Dict[str, Any] = {
@@ -56,8 +64,12 @@ class TelemetryService:
             return "Gewitter"
         return "Sonnig"
 
-    async def fetch_forecast_live(self):
+    async def fetch_forecast_live(self, force=False):
         """Fetches live 7-day forecast and 24h hourly forecast based on German DWD-ICON open model."""
+        now = time.time()
+        if not force and (now - self._last_forecast_fetch) < self.forecast_cooldown:
+            return
+        self._last_forecast_fetch = now
         try:
             url = f"https://api.open-meteo.com/v1/dwd-icon?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,snowfall_sum,uv_index_max,winddirection_10m_dominant,sunshine_duration,precipitation_hours,windspeed_10m_max&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_hours=25"
             req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
@@ -179,6 +191,9 @@ class TelemetryService:
                     })
                 self.data["forecast_7days"] = forecast_list
         except Exception as e:
+            if "weather" not in self.data:
+                self.data["weather"] = {}
+            self.data["weather"]["error"] = str(e)
             print(f"Error fetching DWD-ICON forecast: {e}")
 
     async def init_stations(self):
@@ -237,8 +252,19 @@ class TelemetryService:
         except Exception as e:
             print(f"Error fetching dynamic stations: {e}")
 
-    async def fetch_pegel_live(self):
+    async def fetch_pegel_live(self, force=False):
         """Asynchronously updates water levels from Pegelonline WSV API including history."""
+        now = time.time()
+        if not force and (now - self._last_pegel_fetch) < self.pegel_cooldown:
+            return
+        self._last_pegel_fetch = now
+        try:
+            await self._fetch_pegel_live_inner()
+        except Exception as e:
+            self.data["water_levels_error"] = str(e)
+            print(f"Error fetching Pegel: {e}")
+
+    async def _fetch_pegel_live_inner(self):
         updated_list = []
         for station in self.stations:
             try:
@@ -302,8 +328,12 @@ class TelemetryService:
         if updated_list:
             self.data["water_levels"] = updated_list
 
-    async def fetch_fire_data_live(self):
+    async def fetch_fire_data_live(self, force=False):
         """Fetches the latest Berlin fire missions from the open data CSV."""
+        now = time.time()
+        if not force and (now - self._last_fire_fetch) < self.fire_cooldown:
+            return
+        self._last_fire_fetch = now
         try:
             url = "https://raw.githubusercontent.com/Berliner-Feuerwehr/BF-Open-Data/main/Datasets/Daily_Data/BFw_mission_data_daily.csv"
             req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
@@ -380,6 +410,7 @@ class TelemetryService:
                 self.data["hauptbeschwerden"] = daily_hauptbeschwerden
 
         except Exception as e:
+            self.data["fire_data_error"] = str(e)
             print(f"Error fetching fire data: {e}")
 
     async def start_polling_loop(self):

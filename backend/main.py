@@ -141,6 +141,20 @@ async def websocket_endpoint(websocket: WebSocket):
                     payload = message.get("data", {})
                     state_manager.set_custom_widget_data(payload.get("widget_id"), payload.get("data"))
 
+                elif msg_type == "REFRESH_TELEMETRY":
+                    payload = message.get("data", {})
+                    widget = payload.get("widget")
+                    if widget == "weather":
+                        await telemetry_service.fetch_forecast_live(force=True)
+                    elif widget == "pegel":
+                        await telemetry_service.fetch_pegel_live(force=True)
+                    elif widget == "fire":
+                        await telemetry_service.fetch_fire_data_live(force=True)
+                    
+                    # Broadcast updated telemetry immediately
+                    ws_manager.sync_broadcast("TELEMETRY_UPDATED", telemetry_service.get_telemetry_data())
+
+
             except json.JSONDecodeError:
                 pass
     except WebSocketDisconnect:

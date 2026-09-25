@@ -1,14 +1,16 @@
 import React from 'react';
 import { WidgetContainer } from '../components/WidgetContainer';
-import { Flame, Info } from 'lucide-react';
+import { Flame, Info, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { LiveTelemetry } from '../types/dashboard';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface FireOperationsWidgetProps {
   telemetry: LiveTelemetry;
+  error?: string | null;
+  onRefresh?: () => void;
 }
 
-export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ telemetry }) => {
+export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ telemetry, error, onRefresh }) => {
   const hasData = telemetry.fire_missions_yesterday !== undefined;
   
   const emsColors = ['#18a1cd', '#1d81a2', '#00dca6', '#09bb9f', '#009076', '#475569', '#64748b'];
@@ -33,6 +35,12 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
 
   return (
     <div className="h-full flex flex-col gap-4">
+      {error && (
+        <div className="bg-red-950/30 border border-red-800 text-red-300 p-3 rounded-lg flex items-center gap-2 shrink-0">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-medium">{error}</span>
+        </div>
+      )}
       {/* Top: Einsatzzahlen */}
       <WidgetContainer 
         title="Einsatzzahlen" 
@@ -41,6 +49,13 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
         iconColor="text-red-500"
         className="flex-none"
         contentClassName="flex flex-col justify-center items-center p-4"
+        headerRight={
+          onRefresh && (
+            <button onClick={onRefresh} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500" title="Aktualisieren">
+              <RefreshCcw className="w-4 h-4" />
+            </button>
+          )
+        }
       >
         {hasData ? (
           <>

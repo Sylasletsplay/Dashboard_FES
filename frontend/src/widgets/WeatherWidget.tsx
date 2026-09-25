@@ -1,22 +1,32 @@
 import React, { useState } from 'react';
 import { WidgetContainer } from '../components/WidgetContainer';
-import { Wind, Thermometer, CloudRain, Gauge, Sun, AlertTriangle } from 'lucide-react';
+import { Wind, Thermometer, CloudRain, Gauge, Sun, AlertTriangle, RefreshCcw } from 'lucide-react';
 import { LiveTelemetry, DayForecast } from '../types/dashboard';
 
 interface WeatherWidgetProps {
   telemetry: LiveTelemetry;
+  error?: string | null;
+  onRefresh?: () => void;
 }
 
-export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry }) => {
+export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, onRefresh }) => {
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const live = telemetry.weather;
   const forecast = telemetry.forecast_7days || [];
 
   // Limit forecast to exactly 7 days
   const next7Days = forecast.slice(0, 7);
+  
+  const telemetryError = error || live.error;
 
   return (
     <div className="h-full flex flex-col gap-4 overflow-hidden">
+      {telemetryError && (
+        <div className="bg-red-950/30 border border-red-800 text-red-300 p-3 rounded-lg flex items-center gap-2 shrink-0">
+          <AlertTriangle className="w-5 h-5 shrink-0" />
+          <span className="text-sm font-medium">{telemetryError}</span>
+        </div>
+      )}
       {/* Top: Aktuell */}
       <div className="flex-shrink-0">
         <WidgetContainer 
@@ -24,6 +34,13 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry }) => {
           subtitle="Wetter-Sensorik & DWD"
           icon={Wind} 
           iconColor="text-amber-500"
+          headerRight={
+            onRefresh && (
+              <button onClick={onRefresh} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500" title="Aktualisieren">
+                <RefreshCcw className="w-4 h-4" />
+              </button>
+            )
+          }
         >
           <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
@@ -232,4 +249,5 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry }) => {
     </div>
   );
 };
+
 
