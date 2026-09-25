@@ -67,16 +67,26 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry }) => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900/80 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-               <div className="flex items-center gap-3">
-                  <CloudRain className="w-5 h-5 text-blue-500" />
-                  <div className="flex flex-col">
-                    <span className="text-[14px] text-slate-500">Niederschlag</span>
-                    <span className="text-lg font-bold font-mono text-slate-800 dark:text-slate-100">
-                      {live.precipitation_mm} mm/h
-                    </span>
-                  </div>
-               </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white dark:bg-slate-900/80 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 flex items-start gap-3">
+                <CloudRain className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                <div className="flex flex-col">
+                  <span className="text-[14px] text-slate-500 leading-tight">Niederschlag</span>
+                  <span className="text-lg font-bold font-mono text-slate-800 dark:text-slate-100 leading-tight mt-0.5">
+                    {live.precipitation_mm} <span className="text-[14px] font-normal text-slate-500">mm/h</span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white dark:bg-slate-900/80 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 flex items-start gap-3">
+                <Sun className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                <div className="flex flex-col">
+                  <span className="text-[14px] text-slate-500 leading-tight">UV-Index</span>
+                  <span className="text-lg font-bold font-mono text-slate-800 dark:text-slate-100 leading-tight mt-0.5">
+                    {forecast[0]?.uv_index ?? '-'} <span className="text-[14px] font-normal text-slate-500">Max</span>
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className={`p-3 rounded-lg border ${
