@@ -22,8 +22,6 @@ class TelemetryService:
         self._manual_trigger = asyncio.Event()
         self.get_active_clients = None
 
-    def trigger_update(self):
-        self._manual_trigger.set()
         
         self.forecast_cooldown = 900
         self.pegel_cooldown = 0
@@ -450,6 +448,9 @@ class TelemetryService:
                 await self._manual_trigger.wait()
                 self._manual_trigger.clear()
 
+
+    def trigger_update(self):
+        self._manual_trigger.set()
 
     def set_city(self, city: str):
         pass
