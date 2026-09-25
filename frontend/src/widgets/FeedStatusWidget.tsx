@@ -44,7 +44,7 @@ export const FeedStatusWidget: React.FC<WidgetProps> = ({ telemetry, sendEvent }
             </span>
           </div>
           <div className="text-[11px] text-slate-500 font-mono">
-            Ziel: ws://127.0.0.1:8000/ws
+            Ziel: {window.location.port === '5173' ? 'ws://127.0.0.1:8000/ws' : 'wss://dashboard-fes.onrender.com/ws'}
           </div>
         </div>
 

@@ -60,9 +60,9 @@ export function useWebSocket() {
       return;
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.port === '5173' ? '127.0.0.1:8000' : window.location.host;
-    const wsUrl = `${protocol}//${host}/ws`;
+    const wsUrl = window.location.port === '5173' 
+      ? 'ws://127.0.0.1:8000/ws' 
+      : 'wss://dashboard-fes.onrender.com/ws';
 
     try {
       const ws = new WebSocket(wsUrl);
