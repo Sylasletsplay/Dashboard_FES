@@ -124,7 +124,13 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
 
             {/* 24h Hourly Forecast */}
             {telemetry.forecast_24h && telemetry.forecast_24h.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 mt-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div 
+                className="flex gap-2 overflow-x-auto pb-1 mt-1 scrollbar-hide" 
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                onWheel={(e) => {
+                  e.currentTarget.scrollLeft += e.deltaY;
+                }}
+              >
                 {telemetry.forecast_24h.map((hour, idx) => (
                   <div key={idx} className="flex flex-col items-center flex-shrink-0 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-200 dark:border-slate-700 min-w-[55px]">
                     <span className="text-[13px] text-slate-500 font-mono mb-1">{hour.time}</span>
@@ -159,15 +165,13 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
       >
         <div className="flex flex-col gap-2">
           {next7Days.map((day: DayForecast, i: number) => {
-            const isExpanded = expandedDay === i && i !== 0;
+            const isExpanded = expandedDay === i;
             return (
             <div 
               key={i} 
-              className={`flex-shrink-0 flex flex-col px-4 py-3 min-h-[64px] bg-white dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-800/80 shadow-sm ${i !== 0 ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors' : ''}`}
+              className={`flex-shrink-0 flex flex-col px-4 py-3 min-h-[64px] bg-white dark:bg-slate-900/60 rounded-lg border border-slate-200 dark:border-slate-800/80 shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors`}
               onClick={() => {
-                if (i !== 0) {
-                  setExpandedDay(isExpanded ? null : i);
-                }
+                setExpandedDay(isExpanded ? null : i);
               }}
             >
               <div className="flex items-center justify-between w-full">

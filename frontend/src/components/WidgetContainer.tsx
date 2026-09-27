@@ -38,7 +38,7 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = ({
           {headerRight}
         </div>
       </div>
-      <div className={`flex-1 overflow-hidden p-3 ${contentClassName}`}>
+      <div className={`flex-1 p-3 ${contentClassName.includes('overflow') ? '' : 'overflow-hidden'} ${contentClassName}`}>
         {children}
       </div>
     </div>
