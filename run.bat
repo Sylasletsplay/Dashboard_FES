@@ -10,34 +10,29 @@ cd /d "%~dp0"
 
 REM 1. Check Python virtual environment
 if not exist "backend\venv" (
-    echo [1/3] Erstelle Python Virtual Environment...
+    echo [1/2] Erstelle Python Virtual Environment...
     python -m venv backend\venv
     call backend\venv\Scripts\activate.bat
-    echo [2/3] Installiere Python-Abhaengigkeiten...
+    echo Installiere Python-Abhaengigkeiten...
     python -m pip install -q -r backend\requirements.txt
-) else (
-    call backend\venv\Scripts\activate.bat
 )
 
-REM 2. Check if frontend build exists
-if not exist "frontend\dist" (
-    echo [3/3] Erstelle Frontend-Produktions-Build...
-    if not exist "frontend\node_modules" (
-        pushd frontend
-        call npm install
-        popd
-    )
+REM 2. Check Frontend dependencies
+if not exist "frontend\node_modules" (
+    echo [2/2] Installiere Frontend-Abhaengigkeiten...
     pushd frontend
-    call npm run build
+    call npm install
     popd
 )
 
 echo.
 echo ===================================================================
-echo   DASHBOARD BEREIT!
-echo   Oeffne Dashboard unter: http://127.0.0.1:8000
+echo   Starte Dashboard im Entwicklungsmodus (Hot-Reload)...
 echo ===================================================================
 echo.
 
-start http://127.0.0.1:8000
-python backend\main.py
+start "KatS Backend (:8000)" cmd /k "backend\venv\Scripts\activate.bat && python backend\main.py"
+start "KatS Frontend (:5173)" cmd /k "cd frontend && npm run dev"
+
+timeout /t 3 >nul
+start http://localhost:5173
