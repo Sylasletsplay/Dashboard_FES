@@ -2,6 +2,15 @@
 
 This is a dashboard application for disaster management and real-time telemetry monitoring.
 
+## Installation
+
+First, clone the repository to your local machine:
+
+```bash
+git clone https://github.com/Sylasletsplay/Dashboard_FES.git
+cd Dashboard_FES
+```
+
 ## Getting Started
 
 To get the frontend and backend running on your machine, simply execute one of the provided startup scripts. These scripts will automatically set up a Python virtual environment, install the necessary backend and frontend dependencies, build the frontend, and start the application.
