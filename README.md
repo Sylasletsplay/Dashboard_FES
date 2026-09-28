@@ -2,6 +2,12 @@
 
 This is a dashboard application for disaster management and real-time telemetry monitoring.
 
+## Without Installation
+
+Open https://sylasletsplay.github.io/Dashboard_FES/
+
+It might take a little bit for the page to load initially because of te free service it is hosted on currently.
+
 ## Installation
 
 First, clone the repository to your local machine:
