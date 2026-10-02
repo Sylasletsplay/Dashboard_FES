@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Moon, Sun } from 'lucide-react';
 import { useWebSocket } from './hooks/useWebSocket';
+import { useScale } from './hooks/useScale';
 import { Header } from './components/Header';
 import { DisconnectBanner } from './components/DisconnectBanner';
 import { WaterLevelWidget } from './widgets/WaterLevelWidget';
@@ -9,6 +11,7 @@ import { WeatherWidget } from './widgets/WeatherWidget';
 export function App() {
   const { state, telemetry, sendEvent } = useWebSocket();
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
+  const scale = useScale();
 
   React.useEffect(() => {
     document.documentElement.classList.add('light');
@@ -35,9 +38,15 @@ export function App() {
   };
 
   return (
-    <div className={`h-screen w-screen overflow-hidden flex flex-col ${
-      theme === 'dark' ? 'bg-[#0b0f19] text-slate-100' : 'bg-slate-950 text-slate-100'
-    }`}>
+    <div
+      className={`h-screen w-screen overflow-hidden ${
+        theme === 'dark' ? 'bg-[#0b0f19] text-slate-100' : 'bg-slate-950 text-slate-100'
+      }`}
+    >
+      <div
+        className="w-full h-full flex flex-col origin-top-left"
+        style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: `${100 / scale}%`, height: `${100 / scale}%` }}
+      >
       {/* Offline / Disconnect Alert Banner */}
       <DisconnectBanner telemetry={telemetry} />
 
@@ -53,8 +62,17 @@ export function App() {
              {isLive ? 'LIVE' : 'OFFLINE'}
           </div>
         </div>
-        <div className="text-lg font-mono text-slate-400">
-           Stand: {telemetry.lastUpdate ? telemetry.lastUpdate.toLocaleTimeString('de-DE') : '--:--:--'}
+        <div className="flex items-center gap-3">
+          <div className="text-lg font-mono text-slate-400">
+             Stand: {telemetry.lastUpdate ? telemetry.lastUpdate.toLocaleTimeString('de-DE') : '--:--:--'}
+          </div>
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Zu Hellmodus wechseln' : 'Zu Dunkelmodus wechseln'}
+            className="p-1.5 rounded hover:bg-slate-800/60 text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
@@ -92,6 +110,7 @@ export function App() {
 
         </div>
       </main>
+      </div>
     </div>
   );
 }

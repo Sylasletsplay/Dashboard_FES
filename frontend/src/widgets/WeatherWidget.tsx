@@ -28,12 +28,14 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
         </div>
       )}
       {/* Top: Aktuell */}
-      <div className="flex-shrink-0">
+      <div className="shrink-0 min-h-0 max-h-[58%] flex flex-col">
         <WidgetContainer 
           title="Aktuell" 
           subtitle="Wetter-Sensorik & DWD"
           icon={Wind} 
           iconColor="text-amber-500"
+          className="flex-1 min-h-0"
+          contentClassName="overflow-y-auto custom-scroll"
           headerRight={
             onRefresh && (
               <button onClick={onRefresh} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500" title="Aktualisieren">
@@ -160,7 +162,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
         subtitle="Next 7 Days"
         icon={Sun} 
         iconColor="text-yellow-500"
-        className="flex-1 min-h-0"
+        className="flex-1 min-h-[260px]"
         contentClassName="p-2 overflow-y-auto"
       >
         <div className="flex flex-col gap-2">

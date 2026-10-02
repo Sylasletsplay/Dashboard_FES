@@ -25,8 +25,11 @@ app.add_middleware(
 
 # ----------------- WebSocket Connection Manager -----------------
 class ConnectionManager:
+    STALE_TIMEOUT = 90  # seconds without a message before a connection is considered dead
+
     def __init__(self):
         self.active_connections: List[WebSocket] = []
+        self.last_seen: Dict[WebSocket, datetime] = {}
         self._loop = None
 
     def set_loop(self, loop):
@@ -36,6 +39,7 @@ class ConnectionManager:
         await websocket.accept()
         was_empty = len(self.active_connections) == 0
         self.active_connections.append(websocket)
+        self.last_seen[websocket] = datetime.now()
         
         # Send initial snapshot immediately upon connect
         initial_payload = {
@@ -50,8 +54,14 @@ class ConnectionManager:
             telemetry_service.trigger_update()
 
     def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
+        last_seen = self.last_seen.pop(websocket, None)
+        was_in = websocket in self.active_connections
+        if was_in:
             self.active_connections.remove(websocket)
+        if was_in and last_seen:
+            idle = (datetime.now() - last_seen).total_seconds()
+            if idle > self.STALE_TIMEOUT:
+                print(f"[WS] Removed stale connection (last active {int(idle)}s ago). Active: {len(self.active_connections)}")
 
     async def broadcast(self, event_type: str, data: Any):
         payload = json.dumps({
@@ -72,6 +82,21 @@ class ConnectionManager:
         if self._loop and self.active_connections:
             asyncio.run_coroutine_threadsafe(self.broadcast(event_type, data), self._loop)
 
+    async def stale_sweeper(self):
+        """Detects dead/stale WS connections (closed tab, sleeping laptop, dropped network)."""
+        while True:
+            await asyncio.sleep(30)
+            now = datetime.now()
+            stale = [
+                ws for ws, seen in self.last_seen.items()
+                if (now - seen).total_seconds() > self.STALE_TIMEOUT
+            ]
+            for ws in stale:
+                try:
+                    await ws.close(code=1000)
+                except Exception:
+                    pass
+
 ws_manager = ConnectionManager()
 
 # Hook state_manager and telemetry_service broadcasts into WebSocket manager
@@ -84,6 +109,7 @@ async def startup_event():
     loop = asyncio.get_running_loop()
     ws_manager.set_loop(loop)
     asyncio.create_task(telemetry_service.start_polling_loop())
+    asyncio.create_task(ws_manager.stale_sweeper())
 
 # ----------------- WebSocket Endpoint -----------------
 @app.websocket("/ws")
@@ -92,6 +118,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             text = await websocket.receive_text()
+            ws_manager.last_seen[websocket] = datetime.now()
             try:
                 message = json.loads(text)
                 msg_type = message.get("type")
@@ -308,4 +335,11 @@ if os.path.exists(FRONTEND_DIST):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        ws_ping_interval=20,
+        ws_ping_timeout=20,
+    )

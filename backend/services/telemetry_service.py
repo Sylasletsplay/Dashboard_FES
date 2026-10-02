@@ -24,8 +24,8 @@ class TelemetryService:
 
         
         self.forecast_cooldown = 900
-        self.pegel_cooldown = 0
-        self.fire_cooldown = 0
+        self.pegel_cooldown = 300
+        self.fire_cooldown = 3600
         self._last_forecast_fetch = 0
         self._last_pegel_fetch = 0
         self._last_fire_fetch = 0
@@ -195,6 +195,9 @@ class TelemetryService:
                     })
                 self.data["forecast_7days"] = forecast_list
         except Exception as e:
+            if getattr(e, "code", None) == 429:
+                self.forecast_cooldown = 3600
+                print("DWD-ICON rate limited (429), backing off 1h")
             if "weather" not in self.data:
                 self.data["weather"] = {}
             self.data["weather"]["error"] = str(e)
@@ -265,6 +268,9 @@ class TelemetryService:
         try:
             await self._fetch_pegel_live_inner()
         except Exception as e:
+            if getattr(e, "code", None) == 429:
+                self.pegel_cooldown = 3600
+                print("Pegelonline rate limited (429), backing off 1h")
             self.data["water_levels_error"] = str(e)
             print(f"Error fetching Pegel: {e}")
 
@@ -327,6 +333,8 @@ class TelemetryService:
                         "history": history
                     })
             except Exception as e:
+                if getattr(e, "code", None) == 429:
+                    raise
                 print(f"Error fetching Pegel {station['name']}: {e}")
 
         if updated_list:
@@ -414,6 +422,9 @@ class TelemetryService:
                 self.data["hauptbeschwerden"] = daily_hauptbeschwerden
 
         except Exception as e:
+            if getattr(e, "code", None) == 429:
+                self.fire_cooldown = 3600
+                print("Fire data API rate limited (429), backing off 1h")
             self.data["fire_data_error"] = str(e)
             print(f"Error fetching fire data: {e}")
 
