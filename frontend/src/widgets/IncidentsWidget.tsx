@@ -80,7 +80,7 @@ export const IncidentsWidget: React.FC<IncidentsWidgetProps> = ({ state, sendEve
           activeIncidents.map(inc => (
             <div
               key={inc.id}
-              className="bg-slate-950/70 p-2.5 rounded border border-slate-800 hover:border-slate-700 transition-colors"
+              className="bg-slate-950 p-2.5 rounded border border-slate-800 hover:border-slate-700 transition-colors"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>

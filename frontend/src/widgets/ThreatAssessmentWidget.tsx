@@ -77,19 +77,19 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
       <div className="flex-1 overflow-y-auto custom-scroll space-y-2 pr-1">
         {/* Key Operational Numbers */}
         <div className="grid grid-cols-3 gap-1.5 text-center">
-          <div className="bg-slate-950/70 p-1.5 rounded border border-slate-800/80">
+          <div className="bg-slate-950 p-1.5 rounded border border-slate-800/80">
             <span className="text-[14px] text-slate-400 block uppercase">Einsätze aktiv</span>
             <span className={`text-xl font-bold font-mono ${activeIncidentsCount > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
               {activeIncidentsCount}
             </span>
           </div>
-          <div className="bg-slate-950/70 p-1.5 rounded border border-slate-800/80">
+          <div className="bg-slate-950 p-1.5 rounded border border-slate-800/80">
             <span className="text-[14px] text-slate-400 block uppercase">Kräfte gesamt</span>
             <span className="text-xl font-bold font-mono text-cyan-400 flex items-center justify-center gap-1">
               <Users className="w-3 h-3 text-cyan-500" /> {totalPersonnel}
             </span>
           </div>
-          <div className="bg-slate-950/70 p-1.5 rounded border border-slate-800/80">
+          <div className="bg-slate-950 p-1.5 rounded border border-slate-800/80">
             <span className="text-[14px] text-slate-400 block uppercase">Im Einsatz</span>
             <span className={`text-xl font-bold font-mono ${deployedPersonnel > 0 ? 'text-orange-400' : 'text-slate-400'}`}>
               {deployedPersonnel}
@@ -100,7 +100,7 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
         {/* Threat Items */}
         <div className="space-y-1.5 pt-1">
           {/* Hochwasser */}
-          <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
+          <div className="bg-slate-950 p-2 rounded border border-slate-800">
             <div className="flex items-center gap-1.5 text-base font-semibold text-cyan-300 mb-1">
               <Waves className="w-3.5 h-3.5 text-cyan-400" />
               <span>Hochwasser / Pegel</span>
@@ -118,7 +118,7 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
           </div>
 
           {/* Unwetter */}
-          <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
+          <div className="bg-slate-950 p-2 rounded border border-slate-800">
             <div className="flex items-center gap-1.5 text-base font-semibold text-yellow-300 mb-1">
               <CloudLightning className="w-3.5 h-3.5 text-yellow-400" />
               <span>Unwetter / Wetterlage</span>
@@ -136,7 +136,7 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
           </div>
 
           {/* KRITIS */}
-          <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
+          <div className="bg-slate-950 p-2 rounded border border-slate-800">
             <div className="flex items-center gap-1.5 text-base font-semibold text-purple-300 mb-1">
               <Power className="w-3.5 h-3.5 text-purple-400" />
               <span>Kritische Infrastrukturen (KRITIS)</span>
@@ -154,7 +154,7 @@ export const ThreatAssessmentWidget: React.FC<WidgetProps> = ({ state, sendEvent
           </div>
 
           {/* Lagebericht Notizen */}
-          <div className="bg-slate-950/50 p-2 rounded border border-slate-800">
+          <div className="bg-slate-950 p-2 rounded border border-slate-800">
             <span className="text-[16px] font-semibold text-slate-400 block mb-1">Lagebericht / Stabs-Notiz</span>
             {isEditing ? (
               <textarea

@@ -69,21 +69,21 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
 
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
+            <div className="bg-slate-950 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
               <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Sun className="w-3.5 h-3.5 text-amber-500" /> Min Temp
               </span>
               <span className="font-mono text-cyan-400 font-bold text-lg">{Math.round(day.temp_min)}°C</span>
             </div>
 
-            <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
+            <div className="bg-slate-950 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
               <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Droplets className="w-3.5 h-3.5 text-blue-400" /> Regenrisiko
               </span>
               <span className="font-mono text-blue-300 font-bold text-lg">{day.precipitation_prob}%</span>
             </div>
 
-            <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
+            <div className="bg-slate-950 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
               <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <CloudRain className="w-3.5 h-3.5 text-blue-500" /> Niederschlag
               </span>
@@ -93,7 +93,7 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
               </span>
             </div>
 
-            <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
+            <div className="bg-slate-950 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
               <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Clock className="w-3.5 h-3.5 text-blue-300" /> Regendauer
               </span>
@@ -102,7 +102,7 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
               </span>
             </div>
 
-            <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
+            <div className="bg-slate-950 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
               <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Wind className="w-3.5 h-3.5 text-slate-400" /> Grundwind
               </span>
@@ -111,7 +111,7 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
               </span>
             </div>
 
-            <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
+            <div className="bg-slate-950 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
               <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Wind className="w-3.5 h-3.5 text-slate-300" /> Spitzenböen
               </span>
@@ -120,7 +120,7 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
               </span>
             </div>
 
-            <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
+            <div className="bg-slate-950 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
               <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <Sun className="w-3.5 h-3.5 text-yellow-500" /> Sonne
               </span>
@@ -129,7 +129,7 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
               </span>
             </div>
 
-            <div className="bg-slate-950/70 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
+            <div className="bg-slate-950 rounded p-2.5 border border-slate-800/50 flex flex-col justify-between">
               <span className="text-slate-400 font-semibold text-[14px] uppercase tracking-wide flex items-center gap-1.5 mb-1">
                 <CloudLightning className="w-3.5 h-3.5 text-purple-400" /> UV Index
               </span>
@@ -139,7 +139,7 @@ const WeatherDetailModal: React.FC<WeatherDetailModalProps> = ({ isOpen, onClose
             </div>
           </div>
 
-          <div className={`mt-2 rounded p-3 border flex justify-between items-center ${isSevere ? 'bg-red-950/30 border-red-900/50' : 'bg-slate-950/70 border-slate-800/50'}`}>
+          <div className={`mt-2 rounded p-3 border flex justify-between items-center ${isSevere ? 'bg-red-950/30 border-red-900/50' : 'bg-slate-950 border-slate-800/50'}`}>
             <span className="text-slate-400 font-semibold text-base flex items-center gap-2">
               <AlertTriangle className={`w-4 h-4 ${isSevere ? 'text-red-500' : 'text-emerald-500'}`} /> 
               Gefahrenpotential
@@ -206,6 +206,14 @@ export const SevenDayForecastWidget: React.FC<WidgetProps> = ({ telemetry }) => 
           <h3 className="font-bold text-[14px] uppercase tracking-wider font-mono text-slate-100">
             Wetter DWD-ICON
           </h3>
+          <a
+            href="https://open-meteo.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-slate-500 hover:text-cyan-400 hover:underline"
+          >
+            © Open-Meteo.com
+          </a>
         </div>
         <div className="flex gap-1">
           <button onClick={scrollLeft} className="p-0.5 hover:bg-slate-700 rounded"><ChevronLeft className="w-3 h-3 text-slate-300"/></button>

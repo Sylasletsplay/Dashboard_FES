@@ -8,6 +8,37 @@ import csv
 from datetime import datetime
 from typing import Any, Dict, List
 
+from services.openmeteo_budget import OpenMeteoBudget
+
+# Trend windows (in hours) offered in the UI dropdown.
+PEGEL_TREND_WINDOWS = [1, 3, 6, 12, 24]
+
+
+def _pegel_trend_map(values: list) -> Dict[str, str]:
+    """Compute a 15-min least-squares slope for each trend window.
+
+    A raw 1h point-difference flips sign constantly because the 15-min
+    readings wobble +-2 cm; a least-squares slope over the chosen window
+    smooths that noise and reflects the real water-level trend.
+    Returns {hours: f"{sign}{delta} cm"} for every window in PEGEL_TREND_WINDOWS.
+    """
+    result: Dict[str, str] = {}
+    for hours in PEGEL_TREND_WINDOWS:
+        window = values[-(hours * 4):]  # 4 x 15-min steps per hour
+        n = len(window)
+        if n < 2:
+            result[str(hours)] = "0 cm"
+            continue
+        ys = window
+        mean_x = (n - 1) / 2.0
+        mean_y = sum(ys) / n
+        denom = sum((i - mean_x) ** 2 for i in range(n))
+        slope_15min = (sum((i - mean_x) * (ys[i] - mean_y) for i in range(n)) / denom) if denom else 0.0
+        delta = round(slope_15min * hours * 4, 1)
+        result[str(hours)] = f"{'+' if delta > 0 else ''}{delta} cm"
+    return result
+
+
 class TelemetryService:
     def __init__(self):
         self.ssl_ctx = ssl.create_default_context()
@@ -22,8 +53,18 @@ class TelemetryService:
         self._manual_trigger = asyncio.Event()
         self.get_active_clients = None
 
-        
-        self.forecast_cooldown = 900
+        # Open-Meteo usage meter. The single forecast request pulls
+        # 23 variables (7 current + 4 hourly + 12 daily) over an 8-day span,
+        # which Open-Meteo bills as (23/10) * (8/14) ~= 1.31 "calls".
+        self.om_variables = 23
+        self.om_days = 8
+        self.om_budget = OpenMeteoBudget(self.om_variables, self.om_days)
+
+        # forecast_cooldown is the AUTO refresh cadence. 600s (10 min) keeps
+        # live weather fresh while using only ~312/day of the 10,000 daily
+        # budget -> ~7.7 days of continuous uptime. Manual refreshes are
+        # separate and allowed on demand.
+        self.forecast_cooldown = 600
         self.pegel_cooldown = 300
         self.fire_cooldown = 3600
         self._last_forecast_fetch = 0
@@ -75,13 +116,14 @@ class TelemetryService:
             return
         self._last_forecast_fetch = now
         try:
-            url = f"https://api.open-meteo.com/v1/dwd-icon?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,snowfall_sum,uv_index_max,winddirection_10m_dominant,sunshine_duration,precipitation_hours,windspeed_10m_max&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_hours=25"
+            url = f"https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,snowfall_sum,uv_index_max,winddirection_10m_dominant,sunshine_duration,precipitation_hours,windspeed_10m_max&forecast_days=8&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_hours=25"
             req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
             loop = asyncio.get_running_loop()
             res_bytes = await loop.run_in_executor(
                 None,
                 lambda: urllib.request.urlopen(req, context=self.ssl_ctx, timeout=4).read()
             )
+            self.om_budget.record()
             raw = json.loads(res_bytes.decode("utf-8"))
             daily = raw.get("daily", {})
             times = daily.get("time", [])
@@ -148,10 +190,10 @@ class TelemetryService:
 
                 forecast_list = []
                 german_days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-                for i in range(min(7, len(times))):
+                for i in range(1, min(8, len(times))):
                     date_str = times[i]
                     dt = datetime.strptime(date_str, "%Y-%m-%d")
-                    weekday = "Heute" if i == 0 else german_days[dt.weekday()]
+                    weekday = "Morgen" if i == 1 else german_days[dt.weekday()]
                     
                     code = int(safe_get("weathercode", i, 0))
                     t_min = round(safe_get("temperature_2m_min", i, 0), 1)
@@ -289,13 +331,18 @@ class TelemetryService:
                 items = json.loads(response_bytes.decode("utf-8"))
                 if items and len(items) >= 1:
                     latest = items[-1]["value"]
-                    
-                    # Calculate 1h delta. 1h ago is roughly 4 items back (15 min intervals)
-                    idx_1h = max(0, len(items) - 5)
-                    prev = items[idx_1h]["value"] if len(items) > 1 else latest
-                    delta = round(latest - prev, 1)
-                    trend = "steigend" if delta > 1 else ("fallend" if delta < -1 else "gleichbleibend")
-                    
+
+                    # Trend (per window) via least-squares slope over the last
+                    # N hours of 15-min readings. A raw 1h point-difference
+                    # flips sign constantly because the readings wobble +-2 cm;
+                    # a slope over the chosen window smooths that noise. The UI
+                    # lets the user pick the window (1h/3h/6h/12h/24h).
+                    trend_map = _pegel_trend_map([it["value"] for it in items])
+                    # Default (server-side) direction uses the 3h window.
+                    d3 = trend_map.get("3", "0 cm").replace(" cm", "").replace("+", "")
+                    d3 = float(d3 or 0)
+                    trend = "steigend" if d3 > 0.5 else ("fallend" if d3 < -0.5 else "gleichbleibend")
+
                     hw1 = station.get("hw1", 400)
                     hw2 = station.get("hw2", 500)
                     hw3 = station.get("hw3", 600)
@@ -326,7 +373,8 @@ class TelemetryService:
                         "station": f"{station.get('water', 'Gewässer')} / {station['name']}",
                         "level_cm": round(latest),
                         "trend": trend,
-                        "delta_1h": f"{'+' if delta > 0 else ''}{delta} cm",
+                        "delta_3h": trend_map.get("3", "0 cm"),
+                        "trend_map": trend_map,
                         "danger_level": danger,
                         "max_normal": hw1,
                         "char_vals": char_vals,
@@ -467,6 +515,8 @@ class TelemetryService:
         pass
 
     def get_telemetry_data(self) -> Dict[str, Any]:
-        return self.data
+        data = dict(self.data)
+        data["openmeteo_budget"] = self.om_budget.get_status(self.forecast_cooldown)
+        return data
 
 telemetry_service = TelemetryService()

@@ -1,9 +1,21 @@
 import React from 'react';
 import { WidgetProps } from '../types/widget';
-import { Activity, Wifi, WifiOff, Server, Clock, Database, RefreshCw } from 'lucide-react';
+import { Activity, Wifi, WifiOff, Server, Clock, Database, RefreshCw, CloudSun } from 'lucide-react';
+
+const fmtReset = (s: number) => {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+};
+
+const fmtUptime = (hours: number) => {
+  if (hours >= 24) return `${(hours / 24).toFixed(1)} Tage`;
+  return `${hours.toFixed(1)} Std.`;
+};
 
 export const FeedStatusWidget: React.FC<WidgetProps> = ({ telemetry, sendEvent }) => {
   const isLive = telemetry.isConnected && telemetry.isLiveFeed;
+  const budget = telemetry.live.openmeteo_budget;
 
   const getLatencyColor = (ms: number) => {
     if (ms <= 0) return 'text-slate-400';
@@ -33,7 +45,7 @@ export const FeedStatusWidget: React.FC<WidgetProps> = ({ telemetry, sendEvent }
       {/* Main Stats Grid */}
       <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto custom-scroll">
         {/* Connection State Card */}
-        <div className="bg-slate-950/60 p-2.5 rounded border border-slate-800/80 flex flex-col justify-between">
+        <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80 flex flex-col justify-between">
           <div className="flex items-center justify-between text-base text-slate-400">
             <span>WebSocket Status</span>
             <Server className="w-3.5 h-3.5 text-slate-500" />
@@ -49,7 +61,7 @@ export const FeedStatusWidget: React.FC<WidgetProps> = ({ telemetry, sendEvent }
         </div>
 
         {/* Latency Card */}
-        <div className="bg-slate-950/60 p-2.5 rounded border border-slate-800/80 flex flex-col justify-between">
+        <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80 flex flex-col justify-between">
           <div className="flex items-center justify-between text-base text-slate-400">
             <span>RTT Latenz</span>
             <Clock className="w-3.5 h-3.5 text-slate-500" />
@@ -66,7 +78,7 @@ export const FeedStatusWidget: React.FC<WidgetProps> = ({ telemetry, sendEvent }
         </div>
 
         {/* Events Counter */}
-        <div className="bg-slate-950/60 p-2.5 rounded border border-slate-800/80 flex flex-col justify-between">
+        <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80 flex flex-col justify-between">
           <div className="flex items-center justify-between text-base text-slate-400">
             <span>Empfangene Live-Events</span>
             <Activity className="w-3.5 h-3.5 text-slate-500" />
@@ -82,7 +94,7 @@ export const FeedStatusWidget: React.FC<WidgetProps> = ({ telemetry, sendEvent }
         </div>
 
         {/* Last Sync Timestamp */}
-        <div className="bg-slate-950/60 p-2.5 rounded border border-slate-800/80 flex flex-col justify-between">
+        <div className="bg-slate-950 p-2.5 rounded border border-slate-800/80 flex flex-col justify-between">
           <div className="flex items-center justify-between text-base text-slate-400">
             <span>Letzter Datenabgleich</span>
             <Database className="w-3.5 h-3.5 text-slate-500" />
@@ -96,6 +108,62 @@ export const FeedStatusWidget: React.FC<WidgetProps> = ({ telemetry, sendEvent }
             {isLive ? 'Aktuell synchronisiert' : 'Stand eingefroren'}
           </div>
         </div>
+
+        {/* Open-Meteo API Budget (full width) */}
+        {budget && (
+          <div className="col-span-2 bg-slate-950 p-2.5 rounded border border-slate-800/80 flex flex-col">
+            <div className="flex items-center justify-between text-base text-slate-400 mb-1">
+              <span className="flex items-center gap-1.5">Open-Meteo API-Budget (tägliche Quote)</span>
+              <CloudSun className="w-3.5 h-3.5 text-slate-500" />
+            </div>
+
+            {/* progress bar */}
+            <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden mb-2">
+              <div
+                className={`h-full rounded-full ${budget.day_pct > 80 ? 'bg-red-500' : budget.day_pct > 50 ? 'bg-amber-500' : 'bg-cyan-500'}`}
+                style={{ width: `${Math.min(100, budget.day_pct)}%` }}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <div className="text-[14px] text-slate-500">Kosten/Request</div>
+                <div className="text-lg font-bold font-mono text-cyan-400">
+                  {budget.cost_per_call.toFixed(2)}
+                  <span className="text-[13px] text-slate-500 font-normal"> Calls</span>
+                </div>
+              </div>
+              <div>
+                <div className="text-[14px] text-slate-500">Verbraucht heute</div>
+                <div className="text-lg font-bold font-mono text-slate-200">
+                  {budget.used_today.toFixed(0)}
+                  <span className="text-[13px] text-slate-500 font-normal"> / {budget.limit_daily}</span>
+                </div>
+              </div>
+              <div>
+                <div className="text-[14px] text-slate-500">Rest heute</div>
+                <div className="text-lg font-bold font-mono text-emerald-400">
+                  {budget.remaining_today.toFixed(0)}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-800/60 text-[14px]">
+              <div className="text-slate-500">
+                Auto-Refresh alle <strong className="text-slate-200 font-mono">{Math.round(budget.auto_interval_sec / 60)} min</strong>
+              </div>
+              <div className="text-slate-500 text-right">
+                Uptime @ Auto: <strong className="text-slate-200 font-mono">{fmtUptime(budget.uptime_hours_at_auto)}</strong>
+              </div>
+              <div className="text-slate-500">
+                Manuelle Refreshes frei: <strong className="text-slate-200 font-mono">{budget.manual_refreshes_left_today}</strong>
+              </div>
+              <div className="text-slate-500 text-right">
+                Tag-Reset in: <strong className="text-slate-200 font-mono">{fmtReset(budget.seconds_to_daily_reset)}</strong>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer / Manual Ping button */}

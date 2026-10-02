@@ -86,7 +86,8 @@ export const TelemetryDashboard: React.FC<WidgetProps> = ({ telemetry, theme }) 
 
                     <div className="flex items-center gap-1 text-base font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
                       {getTrendIcon(pegel.trend)}
-                      <span className="text-slate-200">{pegel.delta_1h}</span>
+                      <span className="text-slate-200">{pegel.delta_3h}</span>
+                      <span className="text-[12px] text-slate-500">/ 3h</span>
                     </div>
                   </div>
 

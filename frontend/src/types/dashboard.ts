@@ -53,7 +53,8 @@ export interface WaterLevelReading {
   station: string;
   level_cm: number;
   trend: 'steigend' | 'fallend' | 'gleichbleibend' | string;
-  delta_1h: string;
+  delta_3h: string;
+  trend_map?: Record<string, string>;
   danger_level: number;
   max_normal: number;
   char_vals?: Record<string, number>;
@@ -106,6 +107,26 @@ export interface HourlyForecast {
   weather_code: number;
 }
 
+export interface OpenMeteoBudget {
+  cost_per_call: number;
+  variables: number;
+  days: number;
+  limit_daily: number;
+  limit_hourly: number;
+  limit_minutely: number;
+  used_today: number;
+  used_this_hour: number;
+  remaining_today: number;
+  day_pct: number;
+  fetches_today: number;
+  manual_refreshes_left_today: number;
+  auto_interval_sec: number;
+  uptime_hours_at_auto: number;
+  seconds_to_daily_reset: number;
+  seconds_to_hourly_reset: number;
+  seconds_to_minutely_reset: number;
+}
+
 export interface LiveTelemetry {
   last_updated: string;
   current_city?: string;
@@ -121,6 +142,7 @@ export interface LiveTelemetry {
   fire_data_error?: string | null;
   forecast_7days?: DayForecast[];
   forecast_24h?: HourlyForecast[];
+  openmeteo_budget?: OpenMeteoBudget;
   kritis: KritisTelemetry;
 }
 

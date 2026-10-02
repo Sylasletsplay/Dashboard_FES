@@ -23,7 +23,7 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = ({
   headerRight
 }) => {
   return (
-    <div className={`kats-panel rounded-lg flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/50 shadow-lg ${className}`}>
+      <div className={`kats-panel rounded-lg flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-lg ${className}`}>
       <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-900/80">
         <span className={`flex items-center gap-2 text-lg font-bold ${iconColor}`}>
           <Icon className="w-5 h-5" />

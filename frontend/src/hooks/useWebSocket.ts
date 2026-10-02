@@ -29,9 +29,9 @@ export function useWebSocket() {
     live: {
       last_updated: new Date().toISOString(),
       water_levels: [
-        { station: 'Donau / Passau', level_cm: 485, trend: 'gleichbleibend', delta_1h: '+1 cm', danger_level: 0, max_normal: 600 },
-        { station: 'Rhein / Köln', level_cm: 244, trend: 'gleichbleibend', delta_1h: '0 cm', danger_level: 0, max_normal: 620 },
-        { station: 'Elbe / Dresden', level_cm: 182, trend: 'fallend', delta_1h: '-2 cm', danger_level: 0, max_normal: 400 }
+        { station: 'Donau / Passau', level_cm: 485, trend: 'gleichbleibend', delta_3h: '+1 cm', danger_level: 0, max_normal: 600 },
+        { station: 'Rhein / Köln', level_cm: 244, trend: 'gleichbleibend', delta_3h: '0 cm', danger_level: 0, max_normal: 620 },
+        { station: 'Elbe / Dresden', level_cm: 182, trend: 'fallend', delta_3h: '-2 cm', danger_level: 0, max_normal: 400 }
       ],
       weather: {
         temperature_c: 14.5,

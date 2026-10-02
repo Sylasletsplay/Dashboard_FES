@@ -53,7 +53,7 @@ export const LogbookWidget: React.FC<LogbookWidgetProps> = ({ state }) => {
           filteredEtb.map(entry => (
             <div
               key={entry.id}
-              className="bg-slate-950/70 p-2 rounded border border-slate-800/90 hover:border-slate-700 transition-colors text-base"
+              className="bg-slate-950 p-2 rounded border border-slate-800/90 hover:border-slate-700 transition-colors text-base"
             >
               <div className="flex items-center justify-between text-[16px] text-slate-400 mb-1">
                 <span className="font-mono font-bold text-purple-400">

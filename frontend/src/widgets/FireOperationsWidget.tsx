@@ -13,7 +13,7 @@ interface FireOperationsWidgetProps {
 export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ telemetry, error, onRefresh }) => {
   const hasData = telemetry.fire_missions_yesterday !== undefined;
   
-  const emsColors = ['#18a1cd', '#1d81a2', '#00dca6', '#09bb9f', '#009076', '#475569', '#64748b'];
+  const emsColors = ['#5d8aa8', '#4f7396', '#6b88a8', '#3d5a80', '#546a86', '#475569', '#64748b'];
   
   let data: any[] = [];
   if (hasData) {
@@ -21,7 +21,7 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
       data.push({ name: 'Brandbekämpfung', value: telemetry.fire_missions_yesterday, color: '#c71e1d' }); // Exclusive Red
     }
     if (telemetry.mission_count_tech) {
-      data.push({ name: 'Technische Hilfe', value: telemetry.mission_count_tech, color: '#fa8c00' });
+      data.push({ name: 'Technische Hilfe', value: telemetry.mission_count_tech, color: '#a16207' });
     }
     
     if (telemetry.hauptbeschwerden && telemetry.hauptbeschwerden.length > 0) {
@@ -29,7 +29,7 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
         data.push({ ...h, color: emsColors[i % emsColors.length] });
       });
     } else if (telemetry.mission_count_ems) {
-      data.push({ name: 'Rettungsdienst', value: telemetry.mission_count_ems, color: '#18a1cd' });
+      data.push({ name: 'Rettungsdienst', value: telemetry.mission_count_ems, color: '#35618f' });
     }
   }
 
@@ -89,6 +89,7 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
                 data={data}
                 dataKey="value"
                 aspectRatio={4/3}
+                isAnimationActive={false}
                 stroke="none"
                 content={(props: any) => {
                   const { x, y, width, height, value, name, color, payload } = props;
@@ -111,7 +112,7 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
                         fill={nodeColor}
                         stroke="#0f172a"
                         strokeWidth={2}
-                        className="transition-all duration-300 hover:opacity-80"
+                        className="hover:opacity-80 transition-opacity duration-200"
                       />
                       {showLabel && (
                         <foreignObject x={x} y={y} width={width} height={height} className="pointer-events-none">
@@ -145,6 +146,19 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
             Lade Spektrum...
           </div>
         )}
+        <div className="w-full shrink-0 h-10 flex flex-col justify-center px-3 border-t border-slate-200 dark:border-slate-800/60">
+          <a
+            href="https://github.com/Berliner-Feuerwehr/BF-Open-Data"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] leading-tight text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:underline"
+          >
+            © Berliner Feuerwehr (CC BY 4.0) – BFw Mission Data
+          </a>
+          <p className="text-[10px] leading-tight text-slate-400/80">
+            BFw Mission Data, Berliner Feuerwehr, Berlin
+          </p>
+        </div>
       </WidgetContainer>
     </div>
   );

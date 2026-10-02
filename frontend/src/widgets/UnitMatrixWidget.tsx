@@ -94,7 +94,7 @@ export const UnitMatrixWidget: React.FC<UnitMatrixWidgetProps> = ({ state, sendE
           filteredUnits.map(unit => (
             <div
               key={unit.id}
-              className="bg-slate-950/60 p-2 rounded border border-slate-800 flex items-center justify-between gap-2 hover:border-slate-700 transition-colors"
+              className="bg-slate-950 p-2 rounded border border-slate-800 flex items-center justify-between gap-2 hover:border-slate-700 transition-colors"
             >
               {/* Unit Info */}
               <div className="min-w-0 flex-1">
