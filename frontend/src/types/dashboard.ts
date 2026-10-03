@@ -1,54 +1,3 @@
-export type FMSStatus = 1 | 2 | 3 | 4 | 5 | 6;
-
-export interface Unit {
-  id: string;
-  callsign: string;
-  name: string;
-  org: 'Feuerwehr' | 'THW' | 'Rettungsdienst' | 'DLRG' | 'KatS-Führungsstaffel' | string;
-  status: FMSStatus;
-  strength: string; // e.g. "1/2/3/6" or "0/1/8/9"
-  sector: string;
-  location: [number, number]; // [lat, lng]
-}
-
-export interface Incident {
-  id: string;
-  title: string;
-  description?: string;
-  priority: 1 | 2 | 3; // 1 = Kritisch/Rot, 2 = Dringlich/Gelb, 3 = Normal/Blau
-  sector: string;
-  status: 'Gemeldet' | 'In Bearbeitung' | 'Unter Kontrolle' | 'Erledigt';
-  assigned_units: string[]; // array of unit IDs or callsigns
-  location: [number, number];
-  created_at: string;
-}
-
-export interface ThreatAssessment {
-  hochwasser: string;
-  unwetter: string;
-  kritis: string;
-  notes: string;
-}
-
-export interface ETBEntry {
-  id: number;
-  timestamp: string;
-  sender: string;
-  recipient: string;
-  content: string;
-  action?: string;
-}
-
-export interface KatSState {
-  alarm_level: number; // 0, 1, 2, 3
-  alarm_title: string;
-  threat_assessment: ThreatAssessment;
-  incidents: Incident[];
-  units: Unit[];
-  etb: ETBEntry[];
-  custom_widgets?: Record<string, any>;
-}
-
 export interface WaterLevelReading {
   station: string;
   level_cm: number;
@@ -71,12 +20,6 @@ export interface WeatherTelemetry {
   warning_level: number;
   warning_text: string;
   error?: string | null;
-}
-
-export interface KritisTelemetry {
-  power_grid: { status: string; label: string; load_percent: number };
-  water_supply: { status: string; label: string; pressure_bar: number };
-  communication: { status: string; label: string; redundancy: string };
 }
 
 export interface DayForecast {
@@ -107,26 +50,6 @@ export interface HourlyForecast {
   weather_code: number;
 }
 
-export interface OpenMeteoBudget {
-  cost_per_call: number;
-  variables: number;
-  days: number;
-  limit_daily: number;
-  limit_hourly: number;
-  limit_minutely: number;
-  used_today: number;
-  used_this_hour: number;
-  remaining_today: number;
-  day_pct: number;
-  fetches_today: number;
-  manual_refreshes_left_today: number;
-  auto_interval_sec: number;
-  uptime_hours_at_auto: number;
-  seconds_to_daily_reset: number;
-  seconds_to_hourly_reset: number;
-  seconds_to_minutely_reset: number;
-}
-
 export interface LiveTelemetry {
   last_updated: string;
   current_city?: string;
@@ -142,20 +65,13 @@ export interface LiveTelemetry {
   fire_data_error?: string | null;
   forecast_7days?: DayForecast[];
   forecast_24h?: HourlyForecast[];
-  openmeteo_budget?: OpenMeteoBudget;
-  kritis: KritisTelemetry;
 }
 
 export interface TelemetryState {
   isConnected: boolean;
-  lastPingMs: number;
   lastUpdate: Date | null;
-  eventsReceived: number;
-  isLiveFeed: boolean;
-  serverTime: string | null;
-  connectedClients: number;
-  uptimeSeconds: number;
-  live: LiveTelemetry;
+  // null until the server has sent real data - never show placeholder values
+  live: LiveTelemetry | null;
 }
 
 export type RefreshWidget = 'weather' | 'pegel' | 'fire';

@@ -9,7 +9,7 @@ Das Backend fungiert als Vermittler zwischen den externen Datenquellen (Wetter, 
 - **WebSockets:** Fr bi-direktionale, echtzeitfhige Kommunikation.
 
 ## Komponenten
-1. **`main.py`:** Einstiegspunkt. Definiert den FastAPI-Server, den WebSocket-Endpunkt (`/ws`) und empfngt Events vom Frontend (z.B. `CHANGE_CITY`).
+1. **`main.py`:** Einstiegspunkt. Definiert den FastAPI-Server, den WebSocket-Endpunkt (`/ws`) und verarbeitet vom Frontend nur `ping` und `REFRESH_TELEMETRY` (Aktualisieren-Knopf, pro Feed höchstens alle 30 s). Clients können den Zustand nicht verändern.
 2. **`telemetry_service.py`:** Ein asynchroner Hintergrund-Service.
    - Lufts in einer Endlosschleife (`_polling_loop`).
    - Ruft alle 5 Minuten externe APIs ab.

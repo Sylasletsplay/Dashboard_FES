@@ -7,7 +7,7 @@ interface DisconnectBannerProps {
 }
 
 export const DisconnectBanner: React.FC<DisconnectBannerProps> = ({ telemetry }) => {
-  if (telemetry.isConnected && telemetry.isLiveFeed) {
+  if (telemetry.isConnected) {
     return null;
   }
 

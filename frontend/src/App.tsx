@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Loader2 } from 'lucide-react';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useScale } from './hooks/useScale';
-import { Header } from './components/Header';
 import { DisconnectBanner } from './components/DisconnectBanner';
 import { WaterLevelWidget } from './widgets/WaterLevelWidget';
 import { FireOperationsWidget } from './widgets/FireOperationsWidget';
@@ -30,12 +29,8 @@ export function App() {
     }
   };
 
-  const isLive = telemetry.isConnected && telemetry.isLiveFeed;
-  const liveData = telemetry.live || {
-    water_levels: [],
-    weather: { temperature_c: 0, wind_speed_kmh: 0, wind_gusts_kmh: 0, wind_direction: '--', precipitation_mm: 0, air_pressure_hpa: 0, warning_level: 0, warning_text: 'Keine Daten' },
-    kritis: { power_grid: { status: '', label: '', load_percent: 0 }, water_supply: { status: '', label: '', pressure_bar: 0 }, communication: { status: '', label: '', redundancy: '' } }
-  };
+  const isLive = telemetry.isConnected;
+  const liveData = telemetry.live;
 
   return (
     <div
@@ -78,6 +73,13 @@ export function App() {
 
       {/* Main Area: 3 Columns Grid */}
       <main className="flex-1 min-h-0 w-full p-4 flex flex-col gap-4 overflow-hidden">
+        {!liveData ? (
+          // No real data yet (e.g. Render cold start) - show nothing rather than placeholder values
+          <div className="flex-1 flex flex-col items-center justify-center gap-3 text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+            <span className="text-lg font-mono">Warte auf Daten vom Server...</span>
+          </div>
+        ) : (
         <div className="flex-1 min-h-0 grid grid-cols-3 gap-4 overflow-hidden">
           
           {/* Left Column: Water Levels */}
@@ -112,6 +114,7 @@ export function App() {
           </div>
 
         </div>
+        )}
       </main>
       </div>
     </div>

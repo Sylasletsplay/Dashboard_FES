@@ -1,28 +1,16 @@
 # Expandability (Erweiterbarkeit)
 
-Das Dashboard wurde modular entwickelt, um knftige Erweiterungen (neue Module, Sensoren, Datenquellen) so reibungslos wie mglich zu integrieren.
+Das Dashboard ist modular aufgebaut, damit neue Datenquellen und Widgets mit wenig Aufwand ergänzt werden können.
 
-## Frontend Widget Registry (`registry.ts`)
-Alle mittleren Widgets werden dynamisch gerendert. 
-Um ein neues Widget hinzuzufgen:
-1. Erstelle eine neue React-Komponente unter `src/widgets/MyNewWidget.tsx`.
-2. Die Komponente muss das Interface `WidgetProps` akzeptieren (bekommt `state`, `telemetry`, `theme`, etc.).
-3. Registriere das Widget in `src/widgets/registry.ts`:
-   ```typescript
-   registerWidget({
-     id: 'my_new_widget',
-     title: 'Mein Neues Widget',
-     category: 'S3',
-     description: 'Zeigt wichtige neue Daten',
-     icon: 'Activity',
-     defaultVisible: true,
-     component: MyNewWidget
-   });
-   ```
-4. Das Widget kann nun dynamisch im Dashboard ein- und ausgeblendet werden.
+## Neues Widget im Frontend
+1. Erstelle eine React-Komponente unter `src/widgets/MyNewWidget.tsx` und nutze `WidgetContainer` als Rahmen (einheitlicher Kopf mit Titel, Icon und optionalem `RefreshButton`).
+2. Ergänze die benötigten Felder in `LiveTelemetry` (`src/types/dashboard.ts`), passend zu den Daten, die das Backend sendet.
+3. Binde das Widget in `App.tsx` in das Spalten-Grid ein und übergib ihm `liveData`.
 
-## Backend State & Events
-Das Python-Backend verfgt ber einen `StateManager`. 
-- Wenn neue Datenstrukturen bentigt werden, knnen diese im Dictionary in `state_manager.py` hinzugefgt werden.
-- Updates an den Frontend-Client erfolgen via WebSockets: `self._notify("MY_EVENT_TYPE", data)`.
-- Das Frontend lauscht in `App.tsx` bzw. im `useWebSocket` Hook auf alle Broadcasts und rendert die UI automatisch neu (Reaktivitt).
+## Neue Datenquelle im Backend
+1. Lege in `services/telemetry_service.py` eine `fetch_..._live(force=False)`-Methode nach dem Muster der bestehenden an (eigener Cooldown, 429-Backoff, Rückgabe `"ok"` / `"skipped"` / `"error"`).
+2. Schreibe die Ergebnisse in `self.data` und rufe die Methode in `start_polling_loop` auf. Alle Clients erhalten die Daten dann automatisch über `TELEMETRY_UPDATED`.
+3. Soll das Widget einen Aktualisieren-Knopf haben, trage den Feed in `main.py` im `REFRESH_TELEMETRY`-Handler ein und ergänze den Namen in `RefreshWidget` (`src/types/dashboard.ts`).
+
+## Read-Only-Prinzip
+Clients können den Server-Zustand nicht verändern. Über den WebSocket werden nur `ping` und `REFRESH_TELEMETRY` (pro Feed höchstens alle 30 s) verarbeitet; es gibt keine schreibenden REST-Endpunkte. Neue Funktionen sollten dieses Prinzip beibehalten.
