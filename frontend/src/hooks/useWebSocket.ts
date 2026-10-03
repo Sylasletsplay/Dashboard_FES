@@ -62,7 +62,7 @@ export function useWebSocket() {
         if (heartbeatRef.current) clearInterval(heartbeatRef.current);
         heartbeatRef.current = window.setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'ping', client_time: Date.now() }));
+            ws.send(JSON.stringify({ type: 'ping' }));
           }
         }, HEARTBEAT_INTERVAL_MS);
       };

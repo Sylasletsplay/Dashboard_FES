@@ -97,8 +97,6 @@ class TelemetryService:
         
         # Initial cached telemetry state
         self.data: Dict[str, Any] = {
-            "current_city": self.current_city,
-            "last_updated": datetime.now().isoformat(),
             "water_levels": [],
             "fire_missions_yesterday": 0,
             "fire_data_date": "--",
@@ -139,7 +137,7 @@ class TelemetryService:
             return "skipped"
         self._last_forecast_fetch = time.time()
         try:
-            url = f"https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,snowfall_sum,uv_index_max,winddirection_10m_dominant,sunshine_duration,precipitation_hours,windspeed_10m_max&forecast_days=8&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_hours=25"
+            url = f"https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,uv_index_max,windspeed_10m_max&forecast_days=8&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_hours=25"
             req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
             loop = asyncio.get_running_loop()
             res_bytes = await loop.run_in_executor(
@@ -198,8 +196,7 @@ class TelemetryService:
                         "temperature_c": round(hourly.get("temperature_2m", [])[i], 1) if i < len(hourly.get("temperature_2m", [])) else 0,
                         "precipitation_mm": round(hourly.get("precipitation", [])[i], 1) if i < len(hourly.get("precipitation", [])) else 0,
                         "wind_speed_kmh": round(hourly.get("wind_speed_10m", [])[i], 1) if i < len(hourly.get("wind_speed_10m", [])) else 0,
-                        "condition": self._code_to_condition(hourly.get("weather_code", [])[i] if i < len(hourly.get("weather_code", [])) else 0),
-                        "weather_code": hourly.get("weather_code", [])[i] if i < len(hourly.get("weather_code", [])) else 0
+                        "condition": self._code_to_condition(hourly.get("weather_code", [])[i] if i < len(hourly.get("weather_code", [])) else 0)
                     })
             self.data["forecast_24h"] = forecast_24h
 
@@ -224,13 +221,8 @@ class TelemetryService:
                     rain_prob = safe_get("precipitation_probability_max", i, 0)
                     gusts = round(safe_get("windgusts_10m_max", i, 0), 1)
                     precip_sum = round(safe_get("precipitation_sum", i, 0), 1)
-                    precip_hours = round(safe_get("precipitation_hours", i, 0), 1)
-                    snow_sum = round(safe_get("snowfall_sum", i, 0), 1)
                     uv = round(safe_get("uv_index_max", i, 0), 1)
-                    wind_dir = round(safe_get("winddirection_10m_dominant", i, 0), 0)
                     wind_speed = round(safe_get("windspeed_10m_max", i, 0), 1)
-                    sun_duration_sec = safe_get("sunshine_duration", i, 0)
-                    sun_hours = round(sun_duration_sec / 3600, 1) if sun_duration_sec else 0
 
                     condition = self._code_to_condition(code)
 
@@ -247,14 +239,9 @@ class TelemetryService:
                         "temp_max": t_max,
                         "precipitation_prob": rain_prob,
                         "precipitation_sum": precip_sum,
-                        "precipitation_hours": precip_hours,
-                        "snowfall_sum": snow_sum,
                         "wind_gusts_kmh": gusts,
                         "wind_speed_kmh": wind_speed,
-                        "winddirection": get_wind_dir(wind_dir),
-                        "sunshine_hours": sun_hours,
                         "uv_index": uv,
-                        "weather_code": code,
                         "condition": condition,
                         "warning_risk": risk
                     })
@@ -371,25 +358,6 @@ class TelemetryService:
                     trend = "steigend" if d3 > 0.5 else ("fallend" if d3 < -0.5 else "gleichbleibend")
 
                     hw1 = station.get("hw1", 400)
-                    hw2 = station.get("hw2", 500)
-                    hw3 = station.get("hw3", 600)
-
-                    danger = 0
-                    if latest >= hw3:
-                        danger = 3
-                    elif latest >= hw2:
-                        danger = 2
-                    elif latest >= hw1:
-                        danger = 1
-
-                    if danger >= 2:
-                        status_str = "ALARM"
-                    elif danger == 1:
-                        status_str = "ERHÖHT"
-                    elif latest < (hw1 * 0.4):
-                        status_str = "NIEDRIGWASSER"
-                    else:
-                        status_str = "NORMAL"
 
                     # Extract history for recharts
                     history = [{"time": item["timestamp"], "value": item["value"]} for item in items[::4]] # Keep every 4th point (1h)
@@ -402,7 +370,6 @@ class TelemetryService:
                         "trend": trend,
                         "delta_3h": trend_map.get("3", "0 cm"),
                         "trend_map": trend_map,
-                        "danger_level": danger,
                         "max_normal": hw1,
                         "char_vals": char_vals,
                         "history": history
@@ -521,7 +488,6 @@ class TelemetryService:
                         self.fetch_fire_data_live(),
                         return_exceptions=True
                     )
-                    self.data["last_updated"] = datetime.now().isoformat()
                     if self.broadcast_callback:
                         self.broadcast_callback("TELEMETRY_UPDATED", self.data)
                 except Exception as e:

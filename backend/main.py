@@ -9,7 +9,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from state_manager import state_manager
 from services.telemetry_service import telemetry_service, manual_refresh_retry_in
 
 app = FastAPI(title="Katastrophenschutz Stabs-Dashboard API", version="1.0.0")
@@ -43,8 +42,6 @@ class ConnectionManager:
         # Send initial snapshot immediately upon connect
         initial_payload = {
             "type": "INITIAL_STATE",
-            "data": state_manager.get_state(),
-            "telemetry": state_manager.get_telemetry(),
             "live_telemetry": telemetry_service.get_telemetry_data()
         }
         await websocket.send_text(json.dumps(initial_payload))
@@ -98,8 +95,7 @@ class ConnectionManager:
 
 ws_manager = ConnectionManager()
 
-# Hook state_manager and telemetry_service broadcasts into WebSocket manager
-state_manager.set_broadcast_callback(ws_manager.sync_broadcast)
+# Hook telemetry_service broadcasts into WebSocket manager
 telemetry_service.broadcast_callback = ws_manager.sync_broadcast
 telemetry_service.get_active_clients = lambda: len(ws_manager.active_connections)
 
@@ -111,9 +107,9 @@ async def startup_event():
     asyncio.create_task(ws_manager.stale_sweeper())
 
 # ----------------- WebSocket Endpoint -----------------
-# Clients are read-only viewers. The only messages acted on are "ping"
-# (latency heartbeat) and "REFRESH_TELEMETRY" (widget refresh buttons, rate
-# limited per feed); everything else is ignored.
+# Clients are read-only viewers. The only message acted on is
+# "REFRESH_TELEMETRY" (widget refresh buttons, rate limited per feed); "ping"
+# keeps the connection alive and everything else is ignored.
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
@@ -125,18 +121,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 message = json.loads(text)
                 msg_type = message.get("type")
                 
-                # Heartbeat Ping/Pong for latency tracking
-                if msg_type == "ping":
-                    pong_response = {
-                        "type": "pong",
-                        "client_time": message.get("client_time"),
-                        "server_time": datetime.now().isoformat(),
-                        "connected_clients": len(ws_manager.active_connections),
-                        "total_events": state_manager.total_events
-                    }
-                    await websocket.send_text(json.dumps(pong_response))
-
-                elif msg_type == "REFRESH_TELEMETRY":
+                # "ping" is only a keep-alive: receiving any message already
+                # refreshed last_seen above, so nothing else to do.
+                if msg_type == "REFRESH_TELEMETRY":
                     payload = message.get("data", {})
                     widget = payload.get("widget")
                     feeds = {
@@ -174,30 +161,6 @@ def get_health():
         "status": "healthy",
         "service": "Katastrophenschutz Dashboard Backend",
         "live_connections": len(ws_manager.active_connections),
-        "telemetry": state_manager.get_telemetry()
-    }
-
-@app.get("/api/overview")
-def get_overview():
-    return state_manager.get_state()
-
-@app.get("/api/units")
-def list_units():
-    return state_manager.get_state().get("units", [])
-
-@app.get("/api/incidents")
-def list_incidents():
-    return state_manager.get_state().get("incidents", [])
-
-@app.get("/api/etb")
-def list_etb():
-    return state_manager.get_state().get("etb", [])
-
-@app.get("/api/telemetry")
-def get_telemetry():
-    return {
-        "server": state_manager.get_telemetry(),
-        "live": telemetry_service.get_telemetry_data()
     }
 
 # ----------------- Static Frontend Mount (if built) -----------------

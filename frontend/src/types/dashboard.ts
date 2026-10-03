@@ -4,7 +4,6 @@ export interface WaterLevelReading {
   trend: 'steigend' | 'fallend' | 'gleichbleibend' | string;
   delta_3h: string;
   trend_map?: Record<string, string>;
-  danger_level: number;
   max_normal: number;
   char_vals?: Record<string, number>;
   history?: { time: string; value: number }[];
@@ -30,15 +29,10 @@ export interface DayForecast {
   precipitation_prob: number;
   wind_gusts_kmh: number;
   wind_speed_kmh?: number;
-  weather_code: number;
   condition: string;
   warning_risk: string;
   precipitation_sum?: number;
-  precipitation_hours?: number;
-  snowfall_sum?: number;
   uv_index?: number;
-  winddirection?: string;
-  sunshine_hours?: number;
 }
 
 export interface HourlyForecast {
@@ -47,12 +41,9 @@ export interface HourlyForecast {
   precipitation_mm: number;
   wind_speed_kmh: number;
   condition: string;
-  weather_code: number;
 }
 
 export interface LiveTelemetry {
-  last_updated: string;
-  current_city?: string;
   water_levels: WaterLevelReading[];
   fire_missions_yesterday?: number;
   fire_data_date?: string;
@@ -82,3 +73,5 @@ export interface RefreshStatus {
   status: 'loading' | 'ok' | 'cooldown' | 'error';
   retryIn?: number;
 }
+
+export type Theme = 'dark' | 'light';

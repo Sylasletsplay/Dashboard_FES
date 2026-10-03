@@ -14,7 +14,7 @@ Das Backend fungiert als Vermittler zwischen den externen Datenquellen (Wetter, 
    - Lufts in einer Endlosschleife (`_polling_loop`).
    - Ruft alle 5 Minuten externe APIs ab.
    - Bereitet die Daten auf und pusht sie via WebSocket an alle verbundenen Clients (Server-Sent-Events / Push-Architektur).
-3. **`state_manager.py`:** Hlt den internen Zustand des Dashboards (welcher Ort, welche Gefahrenlage). Er sorgt dafr, dass neu verbindende Clients sofort den letzten bekannten Zustand ("Current State") erhalten, ohne auf den nchsten 5-Minuten-Poll warten zu mssen.
+3. **Erster Datenstand:** Neu verbindende Clients erhalten sofort die zuletzt abgerufenen Telemetriedaten (`INITIAL_STATE`), ohne auf den nächsten Poll warten zu müssen.
 
 ## Vermeidung von API-Rate-Limits
 Anstatt dass jedes geffnete Dashboard-Tab selbst Wetter-APIs abfragt, macht dies ausschlielich das Python-Backend. Alle Frontend-Clients erhalten dieselben vorbereiteten JSON-Pakete. Das schont externe Ressourcen und verhindert Sperrungen (IP-Bans).
