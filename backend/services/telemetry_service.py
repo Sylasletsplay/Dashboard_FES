@@ -9,7 +9,6 @@ import csv
 from datetime import datetime
 from typing import Any, Dict, List
 
-from services.openmeteo_budget import OpenMeteoBudget
 
 # Trend windows (in hours) offered in the UI dropdown.
 PEGEL_TREND_WINDOWS = [1, 3, 6, 12, 24]
@@ -88,13 +87,6 @@ class TelemetryService:
         self._manual_trigger = asyncio.Event()
         self.get_active_clients = None
 
-        # Open-Meteo usage meter. The single forecast request pulls
-        # 23 variables (7 current + 4 hourly + 12 daily) over an 8-day span,
-        # which Open-Meteo bills as (23/10) * (8/14) ~= 1.31 "calls".
-        self.om_variables = 23
-        self.om_days = 8
-        self.om_budget = OpenMeteoBudget(self.om_variables, self.om_days)
-
         # Active AUTO refresh cadences (raised on 429, restored on success).
         self.forecast_cooldown = FORECAST_COOLDOWN
         self.pegel_cooldown = PEGEL_COOLDOWN
@@ -154,7 +146,6 @@ class TelemetryService:
                 None,
                 lambda: urllib.request.urlopen(req, context=self.ssl_ctx, timeout=4).read()
             )
-            self.om_budget.record()
             self.forecast_cooldown = FORECAST_COOLDOWN
             raw = json.loads(res_bytes.decode("utf-8"))
             daily = raw.get("daily", {})
@@ -549,12 +540,7 @@ class TelemetryService:
     def trigger_update(self):
         self._manual_trigger.set()
 
-    def set_city(self, city: str):
-        pass
-
     def get_telemetry_data(self) -> Dict[str, Any]:
-        data = dict(self.data)
-        data["openmeteo_budget"] = self.om_budget.get_status(self.forecast_cooldown)
-        return data
+        return dict(self.data)
 
 telemetry_service = TelemetryService()
