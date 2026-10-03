@@ -1,14 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { WidgetContainer } from '../components/WidgetContainer';
-import { Waves, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Search, Filter, AlertTriangle, RefreshCcw, Timer } from 'lucide-react';
+import { RefreshButton } from '../components/RefreshButton';
+import { Waves, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Search, Filter, AlertTriangle, Timer } from 'lucide-react';
 import { RiverLevelChart } from '../components/charts/RiverLevelChart';
-import { WaterLevelReading } from '../types/dashboard';
+import { WaterLevelReading, RefreshStatus } from '../types/dashboard';
 
 interface WaterLevelWidgetProps {
   waterLevels: WaterLevelReading[];
   theme?: any;
   error?: string | null;
   onRefresh?: () => void;
+  refreshStatus?: RefreshStatus;
 }
 
 const TREND_WINDOWS = ['1', '3', '6', '12', '24'];
@@ -21,7 +23,7 @@ const trendFromDelta = (deltaStr: string) => {
   return 'gleichbleibend';
 };
 
-export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels, theme, error, onRefresh }) => {
+export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels, theme, error, onRefresh, refreshStatus }) => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<string>('ALL');
@@ -91,11 +93,7 @@ export const WaterLevelWidget: React.FC<WaterLevelWidgetProps> = ({ waterLevels,
       className="h-full"
       contentClassName="flex flex-col gap-2"
       headerRight={
-        onRefresh && (
-          <button onClick={onRefresh} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500" title="Aktualisieren">
-            <RefreshCcw className="w-4 h-4" />
-          </button>
-        )
+        onRefresh && <RefreshButton onClick={onRefresh} status={refreshStatus} />
       }
     >
       {error && (

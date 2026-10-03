@@ -9,7 +9,7 @@ import { FireOperationsWidget } from './widgets/FireOperationsWidget';
 import { WeatherWidget } from './widgets/WeatherWidget';
 
 export function App() {
-  const { state, telemetry, sendEvent } = useWebSocket();
+  const { telemetry, refreshStatus, refreshWidget } = useWebSocket();
   const [theme, setTheme] = useState<'dark' | 'light'>('light');
   const scale = useScale();
 
@@ -86,7 +86,8 @@ export function App() {
               waterLevels={liveData.water_levels} 
               theme={theme} 
               error={liveData.water_levels_error}
-              onRefresh={() => sendEvent('REFRESH_TELEMETRY', { widget: 'pegel' })}
+              onRefresh={() => refreshWidget('pegel')}
+              refreshStatus={refreshStatus.pegel}
             />
           </div>
 
@@ -95,7 +96,8 @@ export function App() {
              <FireOperationsWidget 
                telemetry={liveData} 
                error={liveData.fire_data_error}
-               onRefresh={() => sendEvent('REFRESH_TELEMETRY', { widget: 'fire' })}
+               onRefresh={() => refreshWidget('fire')}
+               refreshStatus={refreshStatus.fire}
              />
           </div>
 
@@ -104,7 +106,8 @@ export function App() {
              <WeatherWidget 
                telemetry={liveData} 
                error={liveData.weather?.error}
-               onRefresh={() => sendEvent('REFRESH_TELEMETRY', { widget: 'weather' })}
+               onRefresh={() => refreshWidget('weather')}
+               refreshStatus={refreshStatus.weather}
              />
           </div>
 

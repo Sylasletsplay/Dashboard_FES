@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from state_manager import state_manager
-from services.telemetry_service import telemetry_service
+from services.telemetry_service import telemetry_service, manual_refresh_retry_in
 
 app = FastAPI(title="Katastrophenschutz Stabs-Dashboard API", version="1.0.0")
 
@@ -177,15 +177,25 @@ async def websocket_endpoint(websocket: WebSocket):
                 elif msg_type == "REFRESH_TELEMETRY":
                     payload = message.get("data", {})
                     widget = payload.get("widget")
-                    if widget == "weather":
-                        await telemetry_service.fetch_forecast_live(force=True)
-                    elif widget == "pegel":
-                        await telemetry_service.fetch_pegel_live(force=True)
-                    elif widget == "fire":
-                        await telemetry_service.fetch_fire_data_live(force=True)
-                    
-                    # Broadcast updated telemetry immediately
-                    ws_manager.sync_broadcast("TELEMETRY_UPDATED", telemetry_service.get_telemetry_data())
+                    feeds = {
+                        "weather": (telemetry_service.fetch_forecast_live, "_last_forecast_fetch"),
+                        "pegel": (telemetry_service.fetch_pegel_live, "_last_pegel_fetch"),
+                        "fire": (telemetry_service.fetch_fire_data_live, "_last_fire_fetch"),
+                    }
+                    if widget in feeds:
+                        fetch, last_attr = feeds[widget]
+                        status = await fetch(force=True)
+                        retry_in = manual_refresh_retry_in(getattr(telemetry_service, last_attr)) if status == "skipped" else 0
+
+                        # Tell the requesting client how its refresh went (button feedback)
+                        await websocket.send_text(json.dumps({
+                            "type": "REFRESH_RESULT",
+                            "data": {"widget": widget, "status": status, "retry_in": retry_in}
+                        }))
+
+                        # Broadcast updated telemetry immediately
+                        if status != "skipped":
+                            ws_manager.sync_broadcast("TELEMETRY_UPDATED", telemetry_service.get_telemetry_data())
 
 
             except json.JSONDecodeError:

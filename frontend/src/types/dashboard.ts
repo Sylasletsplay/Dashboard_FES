@@ -157,3 +157,12 @@ export interface TelemetryState {
   uptimeSeconds: number;
   live: LiveTelemetry;
 }
+
+export type RefreshWidget = 'weather' | 'pegel' | 'fire';
+
+// Lifecycle of a manual refresh button press. 'cooldown' = server skipped it
+// because the feed was fetched less than MANUAL_REFRESH_MIN_GAP seconds ago.
+export interface RefreshStatus {
+  status: 'loading' | 'ok' | 'cooldown' | 'error';
+  retryIn?: number;
+}

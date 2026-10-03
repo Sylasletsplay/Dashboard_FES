@@ -1,4 +1,5 @@
 import asyncio
+import math
 import time
 import json
 import ssl
@@ -12,6 +13,40 @@ from services.openmeteo_budget import OpenMeteoBudget
 
 # Trend windows (in hours) offered in the UI dropdown.
 PEGEL_TREND_WINDOWS = [1, 3, 6, 12, 24]
+
+# Default AUTO refresh cadences (seconds). A 429 temporarily raises the active
+# cooldown to RATE_LIMIT_BACKOFF; the next successful fetch restores these.
+# FORECAST: 600s (10 min) keeps live weather fresh while using only ~189 of
+# the 10,000 daily Open-Meteo calls.
+FORECAST_COOLDOWN = 600
+PEGEL_COOLDOWN = 300
+FIRE_COOLDOWN = 3600
+RATE_LIMIT_BACKOFF = 3600
+
+# Minimum gap between two manual (forced) refreshes of the same feed. Manual
+# refreshes skip the auto cooldown, and /ws is public, so without this a
+# client could fire an unlimited number of upstream requests.
+MANUAL_REFRESH_MIN_GAP = 30
+
+
+def _fetch_allowed(last_fetch: float, cooldown: float, force: bool) -> bool:
+    elapsed = time.time() - last_fetch
+    return elapsed >= (MANUAL_REFRESH_MIN_GAP if force else cooldown)
+
+
+def manual_refresh_retry_in(last_fetch: float) -> int:
+    """Seconds until a manual refresh of a feed fetched at `last_fetch` is allowed."""
+    return max(0, math.ceil(MANUAL_REFRESH_MIN_GAP - (time.time() - last_fetch)))
+
+
+def _log_rate_limited(source: str, e: Exception):
+    """Print the body of a 429 response - it names which limit was hit
+    (e.g. Open-Meteo: "Daily API request limit exceeded")."""
+    try:
+        body = e.read().decode("utf-8", errors="replace")
+    except Exception:
+        body = "<no body>"
+    print(f"{source} rate limited (429), backing off {RATE_LIMIT_BACKOFF}s. Response: {body}")
 
 
 def _pegel_trend_map(values: list) -> Dict[str, str]:
@@ -60,13 +95,10 @@ class TelemetryService:
         self.om_days = 8
         self.om_budget = OpenMeteoBudget(self.om_variables, self.om_days)
 
-        # forecast_cooldown is the AUTO refresh cadence. 600s (10 min) keeps
-        # live weather fresh while using only ~312/day of the 10,000 daily
-        # budget -> ~7.7 days of continuous uptime. Manual refreshes are
-        # separate and allowed on demand.
-        self.forecast_cooldown = 600
-        self.pegel_cooldown = 300
-        self.fire_cooldown = 3600
+        # Active AUTO refresh cadences (raised on 429, restored on success).
+        self.forecast_cooldown = FORECAST_COOLDOWN
+        self.pegel_cooldown = PEGEL_COOLDOWN
+        self.fire_cooldown = FIRE_COOLDOWN
         self._last_forecast_fetch = 0
         self._last_pegel_fetch = 0
         self._last_fire_fetch = 0
@@ -111,10 +143,9 @@ class TelemetryService:
 
     async def fetch_forecast_live(self, force=False):
         """Fetches live 7-day forecast and 24h hourly forecast based on German DWD-ICON open model."""
-        now = time.time()
-        if not force and (now - self._last_forecast_fetch) < self.forecast_cooldown:
-            return
-        self._last_forecast_fetch = now
+        if not _fetch_allowed(self._last_forecast_fetch, self.forecast_cooldown, force):
+            return "skipped"
+        self._last_forecast_fetch = time.time()
         try:
             url = f"https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,snowfall_sum,uv_index_max,winddirection_10m_dominant,sunshine_duration,precipitation_hours,windspeed_10m_max&forecast_days=8&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_hours=25"
             req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
@@ -124,6 +155,7 @@ class TelemetryService:
                 lambda: urllib.request.urlopen(req, context=self.ssl_ctx, timeout=4).read()
             )
             self.om_budget.record()
+            self.forecast_cooldown = FORECAST_COOLDOWN
             raw = json.loads(res_bytes.decode("utf-8"))
             daily = raw.get("daily", {})
             times = daily.get("time", [])
@@ -238,12 +270,14 @@ class TelemetryService:
                 self.data["forecast_7days"] = forecast_list
         except Exception as e:
             if getattr(e, "code", None) == 429:
-                self.forecast_cooldown = 3600
-                print("DWD-ICON rate limited (429), backing off 1h")
+                self.forecast_cooldown = RATE_LIMIT_BACKOFF
+                _log_rate_limited("Open-Meteo (DWD-ICON)", e)
             if "weather" not in self.data:
                 self.data["weather"] = {}
             self.data["weather"]["error"] = str(e)
             print(f"Error fetching DWD-ICON forecast: {e}")
+            return "error"
+        return "ok"
 
     async def init_stations(self):
         """Dynamically fetch river stations based on current lat/lon."""
@@ -303,18 +337,20 @@ class TelemetryService:
 
     async def fetch_pegel_live(self, force=False):
         """Asynchronously updates water levels from Pegelonline WSV API including history."""
-        now = time.time()
-        if not force and (now - self._last_pegel_fetch) < self.pegel_cooldown:
-            return
-        self._last_pegel_fetch = now
+        if not _fetch_allowed(self._last_pegel_fetch, self.pegel_cooldown, force):
+            return "skipped"
+        self._last_pegel_fetch = time.time()
         try:
             await self._fetch_pegel_live_inner()
+            self.pegel_cooldown = PEGEL_COOLDOWN
         except Exception as e:
             if getattr(e, "code", None) == 429:
-                self.pegel_cooldown = 3600
-                print("Pegelonline rate limited (429), backing off 1h")
+                self.pegel_cooldown = RATE_LIMIT_BACKOFF
+                _log_rate_limited("Pegelonline", e)
             self.data["water_levels_error"] = str(e)
             print(f"Error fetching Pegel: {e}")
+            return "error"
+        return "ok"
 
     async def _fetch_pegel_live_inner(self):
         updated_list = []
@@ -390,10 +426,9 @@ class TelemetryService:
 
     async def fetch_fire_data_live(self, force=False):
         """Fetches the latest Berlin fire missions from the open data CSV."""
-        now = time.time()
-        if not force and (now - self._last_fire_fetch) < self.fire_cooldown:
-            return
-        self._last_fire_fetch = now
+        if not _fetch_allowed(self._last_fire_fetch, self.fire_cooldown, force):
+            return "skipped"
+        self._last_fire_fetch = time.time()
         try:
             url = "https://raw.githubusercontent.com/Berliner-Feuerwehr/BF-Open-Data/main/Datasets/Daily_Data/BFw_mission_data_daily.csv"
             req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
@@ -402,7 +437,8 @@ class TelemetryService:
                 None,
                 lambda: urllib.request.urlopen(req, context=self.ssl_ctx, timeout=4).read()
             )
-            
+            self.fire_cooldown = FIRE_COOLDOWN
+
             decoded = res_bytes.decode("utf-8").strip().split('\n')
             if len(decoded) > 1:
                 # the file has header: mission_created_date,mission_count_all,mission_count_ems,mission_count_ems_critical,mission_count_ems_critical_cpr,mission_count_fire,...
@@ -416,7 +452,7 @@ class TelemetryService:
                     all_idx = header.index("mission_count_all")
                 except ValueError:
                     print("Error: Required columns not found in BF CSV")
-                    return
+                    return "error"
                 
                 rows = list(reader)
                 if rows:
@@ -471,10 +507,12 @@ class TelemetryService:
 
         except Exception as e:
             if getattr(e, "code", None) == 429:
-                self.fire_cooldown = 3600
-                print("Fire data API rate limited (429), backing off 1h")
+                self.fire_cooldown = RATE_LIMIT_BACKOFF
+                _log_rate_limited("Fire data API", e)
             self.data["fire_data_error"] = str(e)
             print(f"Error fetching fire data: {e}")
+            return "error"
+        return "ok"
 
     async def start_polling_loop(self):
         """Periodic background poll for telemetry & forecast."""

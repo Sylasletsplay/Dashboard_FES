@@ -1,16 +1,18 @@
 import React from 'react';
 import { WidgetContainer } from '../components/WidgetContainer';
-import { Flame, Info, AlertTriangle, RefreshCcw } from 'lucide-react';
-import { LiveTelemetry } from '../types/dashboard';
+import { RefreshButton } from '../components/RefreshButton';
+import { Flame, Info, AlertTriangle } from 'lucide-react';
+import { LiveTelemetry, RefreshStatus } from '../types/dashboard';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface FireOperationsWidgetProps {
   telemetry: LiveTelemetry;
   error?: string | null;
   onRefresh?: () => void;
+  refreshStatus?: RefreshStatus;
 }
 
-export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ telemetry, error, onRefresh }) => {
+export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ telemetry, error, onRefresh, refreshStatus }) => {
   const hasData = telemetry.fire_missions_yesterday !== undefined;
   
   const emsColors = ['#5d8aa8', '#4f7396', '#6b88a8', '#3d5a80', '#546a86', '#475569', '#64748b'];
@@ -50,11 +52,7 @@ export const FireOperationsWidget: React.FC<FireOperationsWidgetProps> = ({ tele
         className="flex-none"
         contentClassName="flex flex-col justify-center items-center p-4"
         headerRight={
-          onRefresh && (
-            <button onClick={onRefresh} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500" title="Aktualisieren">
-              <RefreshCcw className="w-4 h-4" />
-            </button>
-          )
+          onRefresh && <RefreshButton onClick={onRefresh} status={refreshStatus} />
         }
       >
         {hasData ? (

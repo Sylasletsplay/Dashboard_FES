@@ -1,15 +1,17 @@
 import React, { useState, useRef } from 'react';
 import { WidgetContainer } from '../components/WidgetContainer';
-import { Wind, Thermometer, CloudRain, Gauge, Sun, AlertTriangle, RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { LiveTelemetry, DayForecast } from '../types/dashboard';
+import { RefreshButton } from '../components/RefreshButton';
+import { Wind, Thermometer, CloudRain, Gauge, Sun, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LiveTelemetry, DayForecast, RefreshStatus } from '../types/dashboard';
 
 interface WeatherWidgetProps {
   telemetry: LiveTelemetry;
   error?: string | null;
   onRefresh?: () => void;
+  refreshStatus?: RefreshStatus;
 }
 
-export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, onRefresh }) => {
+export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, onRefresh, refreshStatus }) => {
   const [expandedDay, setExpandedDay] = useState<number | null>(null);
   const hourlyScrollRef = useRef<HTMLDivElement>(null);
   const scrollHourly = (dir: number) => {
@@ -41,11 +43,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
           className="flex-1 min-h-0"
           contentClassName="overflow-y-auto custom-scroll"
           headerRight={
-            onRefresh && (
-              <button onClick={onRefresh} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500" title="Aktualisieren">
-                <RefreshCcw className="w-4 h-4" />
-              </button>
-            )
+            onRefresh && <RefreshButton onClick={onRefresh} status={refreshStatus} />
           }
         >
           <div className="flex flex-col gap-2">

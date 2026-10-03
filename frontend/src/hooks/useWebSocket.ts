@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { KatSState, TelemetryState } from '../types/dashboard';
+import { KatSState, TelemetryState, RefreshStatus, RefreshWidget } from '../types/dashboard';
+
+// How long the result of a refresh stays visible on the button.
+const REFRESH_RESULT_VISIBLE_MS = 3000;
+// Give up waiting for the server's REFRESH_RESULT after this long.
+const REFRESH_RESPONSE_TIMEOUT_MS = 20000;
 
 const DEFAULT_STATE: KatSState = {
   alarm_level: 0,
@@ -51,9 +56,30 @@ export function useWebSocket() {
     }
   });
 
+  const [refreshStatus, setRefreshStatus] = useState<Partial<Record<RefreshWidget, RefreshStatus>>>({});
+  const refreshTimersRef = useRef<Partial<Record<RefreshWidget, number>>>({});
+
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const pingIntervalRef = useRef<number | null>(null);
+
+  const setRefreshTimer = (widget: RefreshWidget, fn: () => void, ms: number) => {
+    const timers = refreshTimersRef.current;
+    if (timers[widget]) clearTimeout(timers[widget]);
+    timers[widget] = window.setTimeout(fn, ms);
+  };
+
+  // Show a refresh outcome on the button, then return it to idle.
+  const showRefreshResult = (widget: RefreshWidget, status: RefreshStatus['status'], retryIn?: number) => {
+    setRefreshStatus(prev => ({ ...prev, [widget]: { status, retryIn } }));
+    setRefreshTimer(widget, () => {
+      setRefreshStatus(prev => {
+        const next = { ...prev };
+        delete next[widget];
+        return next;
+      });
+    }, REFRESH_RESULT_VISIBLE_MS);
+  };
 
   const connect = useCallback(() => {
     if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
@@ -117,6 +143,9 @@ export function useWebSocket() {
             if (msg.live_telemetry) {
               setTelemetry(prev => ({ ...prev, live: msg.live_telemetry }));
             }
+          } else if (msg.type === "REFRESH_RESULT") {
+            const { widget, status, retry_in } = msg.data;
+            showRefreshResult(widget, status === 'skipped' ? 'cooldown' : status, retry_in);
           } else if (msg.type === "TELEMETRY_UPDATED") {
             setTelemetry(prev => ({ ...prev, live: msg.data }));
           } else if (msg.type === "ALARM_LEVEL_CHANGED") {
@@ -222,5 +251,16 @@ export function useWebSocket() {
     }
   }, []);
 
-  return { state, telemetry, sendEvent };
+  const refreshWidget = useCallback((widget: RefreshWidget) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      showRefreshResult(widget, 'error');
+      return;
+    }
+    setRefreshStatus(prev => ({ ...prev, [widget]: { status: 'loading' } }));
+    wsRef.current.send(JSON.stringify({ type: 'REFRESH_TELEMETRY', data: { widget } }));
+    // No answer (e.g. connection dropped mid-request) -> show an error
+    setRefreshTimer(widget, () => showRefreshResult(widget, 'error'), REFRESH_RESPONSE_TIMEOUT_MS);
+  }, []);
+
+  return { state, telemetry, sendEvent, refreshStatus, refreshWidget };
 }
