@@ -1,15 +1,26 @@
 <!doctype html>
-<html lang="de" class="dark">
+<html lang="de">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Katastrophenschutz Führungsstab - Stabs-Dashboard (DV 100)</title>
-    <!-- Leaflet CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      // Apply the saved theme (or the system preference) before first paint.
+      // Key must match STORAGE_KEY in src/hooks/useTheme.ts.
+      (function () {
+        var theme;
+        try { theme = localStorage.getItem('kats-theme'); } catch (e) {}
+        if (theme !== 'dark' && theme !== 'light') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
   </head>
-  <body class="bg-[#0b0f19] text-slate-100 overflow-hidden select-none font-sans">
+  <body class="overflow-hidden select-none font-sans">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

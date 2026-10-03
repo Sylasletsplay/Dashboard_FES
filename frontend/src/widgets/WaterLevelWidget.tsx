@@ -3,11 +3,11 @@ import { WidgetContainer } from '../components/WidgetContainer';
 import { RefreshButton } from '../components/RefreshButton';
 import { Waves, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Search, Filter, AlertTriangle, Timer } from 'lucide-react';
 import { RiverLevelChart } from '../components/charts/RiverLevelChart';
-import { WaterLevelReading, RefreshStatus } from '../types/dashboard';
+import { WaterLevelReading, RefreshStatus, Theme } from '../types/dashboard';
 
 interface WaterLevelWidgetProps {
   waterLevels: WaterLevelReading[];
-  theme?: any;
+  theme?: Theme;
   error?: string | null;
   onRefresh?: () => void;
   refreshStatus?: RefreshStatus;
