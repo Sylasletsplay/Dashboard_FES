@@ -2,13 +2,12 @@ import asyncio
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
 
 from state_manager import state_manager
 from services.telemetry_service import telemetry_service, manual_refresh_retry_in
@@ -18,8 +17,8 @@ app = FastAPI(title="Katastrophenschutz Stabs-Dashboard API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_credentials=False,
+    allow_methods=["GET"],
     allow_headers=["*"],
 )
 
@@ -112,6 +111,9 @@ async def startup_event():
     asyncio.create_task(ws_manager.stale_sweeper())
 
 # ----------------- WebSocket Endpoint -----------------
+# Clients are read-only viewers. The only messages acted on are "ping"
+# (latency heartbeat) and "REFRESH_TELEMETRY" (widget refresh buttons, rate
+# limited per feed); everything else is ignored.
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
@@ -133,46 +135,6 @@ async def websocket_endpoint(websocket: WebSocket):
                         "total_events": state_manager.total_events
                     }
                     await websocket.send_text(json.dumps(pong_response))
-
-                elif msg_type == "UPDATE_UNIT_STATUS":
-                    payload = message.get("data", {})
-                    state_manager.update_unit_status(
-                        unit_id=payload.get("unit_id"),
-                        status=payload.get("status"),
-                        sector=payload.get("sector"),
-                        location=payload.get("location")
-                    )
-
-                elif msg_type == "UPDATE_ALARM_LEVEL":
-                    payload = message.get("data", {})
-                    state_manager.update_alarm_level(
-                        level=payload.get("level", 0),
-                        title=payload.get("title")
-                    )
-
-                elif msg_type == "UPDATE_THREATS":
-                    state_manager.update_threat_assessment(message.get("data", {}))
-
-                elif msg_type == "ADD_INCIDENT":
-                    state_manager.add_incident(message.get("data", {}))
-
-                elif msg_type == "UPDATE_INCIDENT":
-                    payload = message.get("data", {})
-                    state_manager.update_incident(payload.get("id"), payload.get("updates", {}))
-
-                elif msg_type == "ADD_ETB_ENTRY":
-                    state_manager.add_etb_entry(message.get("data", {}))
-
-                elif msg_type == "RESET_STATE":
-                    state_manager.reset_state()
-
-                elif msg_type == "CHANGE_CITY":
-                    payload = message.get("data", {})
-                    telemetry_service.set_city(payload.get("city", "Passau"))
-
-                elif msg_type == "CUSTOM_WIDGET_DATA":
-                    payload = message.get("data", {})
-                    state_manager.set_custom_widget_data(payload.get("widget_id"), payload.get("data"))
 
                 elif msg_type == "REFRESH_TELEMETRY":
                     payload = message.get("data", {})
@@ -205,46 +167,6 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception:
         ws_manager.disconnect(websocket)
 
-# ----------------- Pydantic Models for REST -----------------
-class AlarmLevelRequest(BaseModel):
-    level: int
-    title: Optional[str] = None
-
-class ThreatAssessmentRequest(BaseModel):
-    hochwasser: Optional[str] = None
-    unwetter: Optional[str] = None
-    kritis: Optional[str] = None
-    notes: Optional[str] = None
-
-class UnitStatusRequest(BaseModel):
-    status: int
-    sector: Optional[str] = None
-    location: Optional[List[float]] = None
-
-class NewUnitRequest(BaseModel):
-    callsign: str
-    name: str
-    org: str
-    status: Optional[int] = 2
-    strength: Optional[str] = "0/0/0/0"
-    sector: Optional[str] = "Bereitstellung"
-    location: Optional[List[float]] = None
-
-class NewIncidentRequest(BaseModel):
-    title: str
-    description: Optional[str] = ""
-    priority: Optional[int] = 2
-    sector: Optional[str] = "EA 1"
-    status: Optional[str] = "Gemeldet"
-    assigned_units: Optional[List[str]] = []
-    location: Optional[List[float]] = None
-
-class ETBEntryRequest(BaseModel):
-    sender: str
-    recipient: str
-    content: str
-    action: Optional[str] = ""
-
 # ----------------- REST Endpoints -----------------
 @app.get("/api/health")
 def get_health():
@@ -259,70 +181,17 @@ def get_health():
 def get_overview():
     return state_manager.get_state()
 
-@app.post("/api/alarm-level")
-def set_alarm_level(req: AlarmLevelRequest):
-    state_manager.update_alarm_level(req.level, req.title)
-    return {"success": True, "level": req.level}
-
-@app.post("/api/threats")
-def update_threats(req: ThreatAssessmentRequest):
-    data = {k: v for k, v in req.model_dump().items() if v is not None}
-    state_manager.update_threat_assessment(data)
-    return {"success": True, "data": data}
-
 @app.get("/api/units")
 def list_units():
     return state_manager.get_state().get("units", [])
-
-@app.post("/api/units")
-def create_unit(req: NewUnitRequest):
-    unit = state_manager.add_unit(req.model_dump())
-    return unit
-
-@app.post("/api/units/{unit_id}/status")
-def update_unit_status(unit_id: str, req: UnitStatusRequest):
-    state_manager.update_unit_status(unit_id, req.status, req.sector, req.location)
-    return {"success": True, "unit_id": unit_id, "status": req.status}
-
-@app.delete("/api/units/{unit_id}")
-def delete_unit(unit_id: str):
-    state_manager.delete_unit(unit_id)
-    return {"success": True, "deleted": unit_id}
 
 @app.get("/api/incidents")
 def list_incidents():
     return state_manager.get_state().get("incidents", [])
 
-@app.post("/api/incidents")
-def create_incident(req: NewIncidentRequest):
-    inc = state_manager.add_incident(req.model_dump())
-    return inc
-
-@app.patch("/api/incidents/{incident_id}")
-def patch_incident(incident_id: str, updates: Dict[str, Any]):
-    res = state_manager.update_incident(incident_id, updates)
-    if not res:
-        raise HTTPException(status_code=404, detail="Incident not found")
-    return res
-
-@app.delete("/api/incidents/{incident_id}")
-def delete_incident(incident_id: str):
-    state_manager.delete_incident(incident_id)
-    return {"success": True, "deleted": incident_id}
-
 @app.get("/api/etb")
 def list_etb():
     return state_manager.get_state().get("etb", [])
-
-@app.post("/api/etb")
-def create_etb_entry(req: ETBEntryRequest):
-    entry = state_manager.add_etb_entry(req.model_dump())
-    return entry
-
-@app.post("/api/reset")
-def reset_state():
-    state_manager.reset_state()
-    return {"success": True, "message": "State reset to clean default."}
 
 @app.get("/api/telemetry")
 def get_telemetry():
@@ -338,8 +207,11 @@ if os.path.exists(FRONTEND_DIST):
 
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
-        file_path = os.path.join(FRONTEND_DIST, full_path)
-        if os.path.exists(file_path) and os.path.isfile(file_path):
+        # Resolve and confirm the file is inside dist/ - blocks "../" paths
+        # that would otherwise serve backend source or state files.
+        dist_root = os.path.realpath(FRONTEND_DIST)
+        file_path = os.path.realpath(os.path.join(dist_root, full_path))
+        if file_path.startswith(dist_root + os.sep) and os.path.isfile(file_path):
             return FileResponse(file_path)
         return FileResponse(os.path.join(FRONTEND_DIST, "index.html"))
 
