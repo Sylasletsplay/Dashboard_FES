@@ -1,3 +1,5 @@
+# Das ist ein Schulprojekt!!!
+
 # Katastrophenschutz Führungsstab – Stabs-Dashboard (DV 100)
 
 Ein Dashboard für den Katastrophenschutz (Führungsstab), das einsatzrelevante
