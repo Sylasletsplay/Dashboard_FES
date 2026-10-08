@@ -6,17 +6,60 @@ import ssl
 import urllib.request
 import urllib.parse
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict, List
+from zoneinfo import ZoneInfo
 
 
 # Trend windows (in hours) offered in the UI dropdown.
 PEGEL_TREND_WINDOWS = [1, 3, 6, 12, 24]
 
+BRIGHTSKY_API = "https://api.brightsky.dev"
+BERLIN_TZ = ZoneInfo("Europe/Berlin")
+
+# Bright Sky icon -> German display text, ordered by severity (used to pick a
+# day's representative condition).
+_ICON_CONDITIONS = [
+    ("clear-day", "Sonnig"),
+    ("clear-night", "Klar"),
+    ("partly-cloudy-day", "Teils bewölkt"),
+    ("partly-cloudy-night", "Teils bewölkt"),
+    ("cloudy", "Bewölkt"),
+    ("wind", "Windig"),
+    ("fog", "Nebel"),
+    ("rain", "Regen"),
+    ("sleet", "Schneeregen"),
+    ("snow", "Schneefall"),
+    ("hail", "Hagel"),
+    ("thunderstorm", "Gewitter"),
+]
+_ICON_TEXT = dict(_ICON_CONDITIONS)
+_ICON_RANK = {icon: rank for rank, (icon, _) in enumerate(_ICON_CONDITIONS)}
+
+
+def _icon_to_condition(icon) -> str:
+    return _ICON_TEXT.get(icon, "--")
+
+
+def _icon_severity(icon) -> int:
+    return _ICON_RANK.get(icon, -1)
+
+
+def _num(value, default: float = 0.0) -> float:
+    """Bright Sky returns null for values a station/forecast does not provide."""
+    return default if value is None else value
+
+
+def _wind_dir(deg) -> str:
+    if deg is None:
+        return "--"
+    dirs = ["N", "NNO", "NO", "ONO", "O", "OSO", "SO", "SSO", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+    return dirs[int((deg / 22.5) + .5) % 16]
+
+
 # Default AUTO refresh cadences (seconds). A 429 temporarily raises the active
 # cooldown to RATE_LIMIT_BACKOFF; the next successful fetch restores these.
-# FORECAST: 600s (10 min) keeps live weather fresh while using only ~189 of
-# the 10,000 daily Open-Meteo calls.
+# FORECAST: 600s (10 min) keeps live weather fresh (2 Bright Sky calls per fetch).
 FORECAST_COOLDOWN = 600
 PEGEL_COOLDOWN = 300
 FIRE_COOLDOWN = 3600
@@ -116,144 +159,139 @@ class TelemetryService:
             "forecast_7days": []
         }
 
-    def _code_to_condition(self, code: int) -> str:
-        if code in [1, 2, 3]:
-            return "Teils bewölkt"
-        elif code in [45, 48]:
-            return "Nebel"
-        elif code in [51, 53, 55, 61, 63, 65]:
-            return "Regen"
-        elif code in [71, 73, 75]:
-            return "Schneefall"
-        elif code in [80, 81, 82]:
-            return "Schauer"
-        elif code in [95, 96, 99]:
-            return "Gewitter"
-        return "Sonnig"
+    async def _get_json(self, url: str, timeout: float = 5):
+        req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
+        loop = asyncio.get_running_loop()
+        res_bytes = await loop.run_in_executor(
+            None,
+            lambda: urllib.request.urlopen(req, context=self.ssl_ctx, timeout=timeout).read()
+        )
+        return json.loads(res_bytes.decode("utf-8"))
 
     async def fetch_forecast_live(self, force=False):
-        """Fetches live 7-day forecast and 24h hourly forecast based on German DWD-ICON open model."""
+        """Fetches current weather, 24h hourly and 7-day forecast from Bright Sky
+        (free DWD data: SYNOP observations + MOSMIX forecasts, no API key and no
+        per-IP daily quota - unlike Open-Meteo, whose shared limit other tenants
+        on the hosting provider's IP kept exhausting)."""
         if not _fetch_allowed(self._last_forecast_fetch, self.forecast_cooldown, force):
             return "skipped"
         self._last_forecast_fetch = time.time()
         try:
-            url = f"https://api.open-meteo.com/v1/forecast?latitude={self.lat}&longitude={self.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windgusts_10m_max,precipitation_sum,uv_index_max,windspeed_10m_max&forecast_days=8&timezone=Europe%2FBerlin&current=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure,precipitation,weather_code&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m&forecast_hours=25"
-            req = urllib.request.Request(url, headers={"User-Agent": "KatS-Stab-Dashboard/1.0"})
-            loop = asyncio.get_running_loop()
-            res_bytes = await loop.run_in_executor(
-                None,
-                lambda: urllib.request.urlopen(req, context=self.ssl_ctx, timeout=4).read()
+            now = datetime.now(BERLIN_TZ)
+            first_date = now.date().isoformat()
+            last_date = (now + timedelta(days=8)).date().isoformat()
+            base = f"lat={self.lat}&lon={self.lon}&tz=Europe%2FBerlin"
+            current_raw, hourly_raw = await asyncio.gather(
+                self._get_json(f"{BRIGHTSKY_API}/current_weather?{base}"),
+                self._get_json(f"{BRIGHTSKY_API}/weather?{base}&date={first_date}&last_date={last_date}"),
             )
             self.forecast_cooldown = FORECAST_COOLDOWN
-            raw = json.loads(res_bytes.decode("utf-8"))
-            daily = raw.get("daily", {})
-            times = daily.get("time", [])
-
-            def get_wind_dir(deg: float) -> str:
-                if deg is None: return "--"
-                dirs = ["N", "NNO", "NO", "ONO", "O", "OSO", "SO", "SSO", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
-                val = int((deg / 22.5) + .5)
-                return dirs[(val % 16)]
 
             # Update current weather
-            current = raw.get("current", {})
+            current = current_raw.get("weather") or {}
             if current:
-                cur_code = current.get("weather_code", 0)
-                cur_gusts = current.get("wind_gusts_10m", 0)
-                cur_precip = current.get("precipitation", 0)
-                
+                cur_gusts = _num(current.get("wind_gust_speed_10"))
+                cur_precip = _num(current.get("precipitation_60"))
+                thunderstorm = current.get("condition") == "thunderstorm"
+
                 risk_level = 0
                 risk_text = "Keine Warnung"
-                if cur_gusts > 65 or cur_code >= 95 or cur_precip > 25:
+                if cur_gusts > 65 or thunderstorm or cur_precip > 25:
                     risk_level = 3
                     risk_text = "Akute Unwettergefahr"
                 elif cur_gusts > 45 or cur_precip > 10:
                     risk_level = 1
                     risk_text = "Erhöhte Gefahr"
-                
+
                 self.data["weather"] = {
-                    "temperature_c": round(current.get("temperature_2m", 0), 1),
-                    "wind_speed_kmh": round(current.get("wind_speed_10m", 0), 1),
+                    "temperature_c": round(_num(current.get("temperature")), 1),
+                    "wind_speed_kmh": round(_num(current.get("wind_speed_10")), 1),
                     "wind_gusts_kmh": round(cur_gusts, 1),
-                    "wind_direction": get_wind_dir(current.get("wind_direction_10m")),
+                    "wind_direction": _wind_dir(current.get("wind_direction_10")),
                     "precipitation_mm": round(cur_precip, 1),
-                    "air_pressure_hpa": round(current.get("surface_pressure", 1013), 1),
+                    "air_pressure_hpa": round(_num(current.get("pressure_msl"), 1013), 1),
                     "warning_level": risk_level,
                     "warning_text": risk_text
                 }
 
-            # Update 24h hourly forecast
-            hourly = raw.get("hourly", {})
-            h_times = hourly.get("time", [])
-            forecast_24h = []
-            if h_times:
-                for i in range(len(h_times)):
-                    dt_h = datetime.fromisoformat(h_times[i])
-                    time_str = dt_h.strftime("%H:%M")
-                    
-                    forecast_24h.append({
-                        "time": time_str,
-                        "temperature_c": round(hourly.get("temperature_2m", [])[i], 1) if i < len(hourly.get("temperature_2m", [])) else 0,
-                        "precipitation_mm": round(hourly.get("precipitation", [])[i], 1) if i < len(hourly.get("precipitation", [])) else 0,
-                        "wind_speed_kmh": round(hourly.get("wind_speed_10m", [])[i], 1) if i < len(hourly.get("wind_speed_10m", [])) else 0,
-                        "condition": self._code_to_condition(hourly.get("weather_code", [])[i] if i < len(hourly.get("weather_code", [])) else 0)
-                    })
-            self.data["forecast_24h"] = forecast_24h
+            hours = []
+            for rec in hourly_raw.get("weather") or []:
+                try:
+                    hours.append((datetime.fromisoformat(rec["timestamp"]).astimezone(BERLIN_TZ), rec))
+                except (KeyError, TypeError, ValueError):
+                    continue
 
-            if times:
-                def safe_get(key: str, idx: int, default: float = 0.0) -> float:
-                    arr = daily.get(key, [])
-                    if not arr or idx >= len(arr):
-                        return default
-                    val = arr[idx]
-                    return default if val is None else val
+            # Update 24h hourly forecast (current hour + 24)
+            current_hour = now.replace(minute=0, second=0, microsecond=0)
+            self.data["forecast_24h"] = [
+                {
+                    "time": dt_h.strftime("%H:%M"),
+                    "temperature_c": round(_num(rec.get("temperature")), 1),
+                    "precipitation_mm": round(_num(rec.get("precipitation")), 1),
+                    "wind_speed_kmh": round(_num(rec.get("wind_speed")), 1),
+                    "condition": _icon_to_condition(rec.get("icon")),
+                }
+                for dt_h, rec in hours if dt_h >= current_hour
+            ][:25]
 
-                forecast_list = []
-                german_days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-                for i in range(1, min(8, len(times))):
-                    date_str = times[i]
-                    dt = datetime.strptime(date_str, "%Y-%m-%d")
-                    weekday = "Morgen" if i == 1 else german_days[dt.weekday()]
-                    
-                    code = int(safe_get("weathercode", i, 0))
-                    t_min = round(safe_get("temperature_2m_min", i, 0), 1)
-                    t_max = round(safe_get("temperature_2m_max", i, 0), 1)
-                    rain_prob = safe_get("precipitation_probability_max", i, 0)
-                    gusts = round(safe_get("windgusts_10m_max", i, 0), 1)
-                    precip_sum = round(safe_get("precipitation_sum", i, 0), 1)
-                    uv = round(safe_get("uv_index_max", i, 0), 1)
-                    wind_speed = round(safe_get("windspeed_10m_max", i, 0), 1)
+            # Aggregate hourly records into days (tomorrow + 6)
+            by_day: Dict[str, list] = {}
+            for dt_h, rec in hours:
+                by_day.setdefault(dt_h.date().isoformat(), []).append((dt_h, rec))
 
-                    condition = self._code_to_condition(code)
+            forecast_list = []
+            german_days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+            for i in range(1, 8):
+                day = now + timedelta(days=i)
+                date_str = day.date().isoformat()
+                recs = [rec for _, rec in by_day.get(date_str, [])]
+                if not recs:
+                    continue
 
-                    risk = "Normal"
-                    if gusts > 65 or rain_prob > 70 or code >= 95 or precip_sum > 25:
-                        risk = "Unwettergefahr"
-                    elif gusts > 45 or rain_prob > 40 or precip_sum > 10:
-                        risk = "Erhöht"
-                    
-                    forecast_list.append({
-                        "date": date_str,
-                        "weekday": weekday,
-                        "temp_min": t_min,
-                        "temp_max": t_max,
-                        "precipitation_prob": rain_prob,
-                        "precipitation_sum": precip_sum,
-                        "wind_gusts_kmh": gusts,
-                        "wind_speed_kmh": wind_speed,
-                        "uv_index": uv,
-                        "condition": condition,
-                        "warning_risk": risk
-                    })
-                self.data["forecast_7days"] = forecast_list
+                def values(key: str) -> List[float]:
+                    return [rec[key] for rec in recs if rec.get(key) is not None]
+
+                temps = values("temperature")
+                t_min = round(min(temps), 1) if temps else 0
+                t_max = round(max(temps), 1) if temps else 0
+                rain_prob = max(values("precipitation_probability"), default=0)
+                gusts = round(max(values("wind_gust_speed"), default=0), 1)
+                wind_speed = round(max(values("wind_speed"), default=0), 1)
+                precip_sum = round(sum(values("precipitation")), 1)
+
+                # Daily condition = most severe daytime (06-21h) icon, like Open-Meteo's daily weathercode
+                daytime = [rec.get("icon") for dt_h, rec in by_day[date_str] if 6 <= dt_h.hour <= 21]
+                icon = max(daytime or [rec.get("icon") for rec in recs], key=_icon_severity)
+                thunderstorm = any(rec.get("condition") == "thunderstorm" for rec in recs)
+
+                risk = "Normal"
+                if gusts > 65 or rain_prob > 70 or thunderstorm or precip_sum > 25:
+                    risk = "Unwettergefahr"
+                elif gusts > 45 or rain_prob > 40 or precip_sum > 10:
+                    risk = "Erhöht"
+
+                # No uv_index: Bright Sky/DWD MOSMIX has no UV data, the frontend shows "-".
+                forecast_list.append({
+                    "date": date_str,
+                    "weekday": "Morgen" if i == 1 else german_days[day.weekday()],
+                    "temp_min": t_min,
+                    "temp_max": t_max,
+                    "precipitation_prob": rain_prob,
+                    "precipitation_sum": precip_sum,
+                    "wind_gusts_kmh": gusts,
+                    "wind_speed_kmh": wind_speed,
+                    "condition": _icon_to_condition(icon),
+                    "warning_risk": risk
+                })
+            self.data["forecast_7days"] = forecast_list
         except Exception as e:
             if getattr(e, "code", None) == 429:
                 self.forecast_cooldown = RATE_LIMIT_BACKOFF
-                _log_rate_limited("Open-Meteo (DWD-ICON)", e)
+                _log_rate_limited("Bright Sky (DWD)", e)
             if "weather" not in self.data:
                 self.data["weather"] = {}
             self.data["weather"]["error"] = str(e)
-            print(f"Error fetching DWD-ICON forecast: {e}")
+            print(f"Error fetching Bright Sky (DWD) forecast: {e}")
             return "error"
         return "ok"
 
