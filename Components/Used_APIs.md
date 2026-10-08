@@ -14,10 +14,11 @@ Kostenlose Geocoding-API, die Stdteteinamen in Koordinaten bersetzt.
 - **Endpoint:** `https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=de`
 - **Zweck:** Notwendig, da Pegelonline und Wetter-APIs lngengrad-/Breitengrad-basiert arbeiten.
 
-## 3. Open-Meteo DWD-ICON API
-Spezialisierte Wetter-API, die direkt auf die rohen, hochauflsenden ICON-D2 Modell-Daten des Deutschen Wetterdienstes (DWD) zugreift.
-- **Endpoint:** `https://api.open-meteo.com/v1/dwd-icon?latitude={lat}&longitude={lon}&hourly=...&daily=...&current=...&timezone=Europe/Berlin`
-- **Abgefragte Parameter:**
-  - `current`: Temperatur, Luftdruck, Windgeschwindigkeit, Ben, Wetter-Code.
-  - `daily`: Maximale/Minimale Temperatur, Niederschlagsdauer (`precipitation_hours`), maximaler Grundwind (`windspeed_10m_max`), maximale Ben (`windgusts_10m_max`).
-- **Besonderheiten:** DWD-ICON-Daten knnen gelegentlich `null` enthalten (wenn das Modell an Rndern ungnau ist). Das Backend nutzt einen `safe_get`-Wrapper, um Abstrze zu verhindern und 0.0 als Fallback einzusetzen.
+## 3. Bright Sky (DWD-Wetterdaten)
+Kostenlose JSON-API für die offenen Daten des Deutschen Wetterdienstes (DWD): Messwerte der SYNOP-Stationen und MOSMIX-Stationsvorhersagen (ca. 10 Tage). Kein API-Key, kein IP-basiertes Tageslimit - ersetzt Open-Meteo, dessen Limit (10.000 Aufrufe/Tag pro IP) auf der geteilten IP des Hosters regelmäßig von anderen Kunden aufgebraucht wurde.
+- **Aktuelles Wetter:** `https://api.brightsky.dev/current_weather?lat={lat}&lon={lon}&tz=Europe/Berlin`
+  - Temperatur, Wind (`wind_speed_10`), Böen (`wind_gust_speed_10`), Windrichtung, Niederschlag der letzten Stunde (`precipitation_60`), Luftdruck (`pressure_msl`, auf Meereshöhe), `condition`.
+- **Stündliche Vorhersage:** `https://api.brightsky.dev/weather?lat={lat}&lon={lon}&date={heute}&last_date={heute+8}&tz=Europe/Berlin`
+  - Liefert die nächsten 24 Stunden und wird im Backend zu Tageswerten für die 7-Tage-Vorhersage aggregiert (Min/Max-Temperatur, Niederschlagssumme, max. Regenwahrscheinlichkeit, max. Wind/Böen, schwerstes Tages-Wettersymbol 06-21 Uhr).
+- **Besonderheiten:** Werte können `null` sein (wenn eine Station/Vorhersage sie nicht liefert); das Backend setzt dann 0 ein. Einen UV-Index liefert der DWD hier nicht - das Frontend zeigt `-`.
+- **Lizenz:** Datenbasis: Deutscher Wetterdienst (DWD Open Data, CC BY 4.0).

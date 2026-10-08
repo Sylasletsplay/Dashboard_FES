@@ -13,7 +13,7 @@ graph TD
         Nginx -->|Proxy_Pass localhost:8000| FastAPI[Python FastAPI Backend]
     end
     
-    FastAPI -->|HTTPS GET| DWD[Open-Meteo DWD-ICON API]
+    FastAPI -->|HTTPS GET| DWD[Bright Sky API - DWD-Daten]
     FastAPI -->|HTTPS GET| WSV[Pegelonline API]
 ```
 

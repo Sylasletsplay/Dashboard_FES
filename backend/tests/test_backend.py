@@ -4,6 +4,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -77,9 +78,10 @@ def test_trend_map_too_little_data():
 
 # ----------------- Cooldowns & rate limiting -----------------
 def test_auto_fetch_respects_cooldown(service, fake_urlopen):
+    before = len(fake_urlopen.calls)
     assert asyncio.run(service.fetch_forecast_live()) == "ok"
     assert asyncio.run(service.fetch_forecast_live()) == "skipped"
-    assert len(fake_urlopen.calls) == 1
+    assert len(fake_urlopen.calls) - before == 2  # current_weather + weather
 
 
 def test_429_backs_off_and_success_restores(service, fake_urlopen):
@@ -98,6 +100,57 @@ def test_manual_refresh_min_gap(service):
     assert asyncio.run(service.fetch_forecast_live(force=True)) == "skipped"
     service._last_forecast_fetch -= ts.MANUAL_REFRESH_MIN_GAP + 1
     assert asyncio.run(service.fetch_forecast_live(force=True)) == "ok"
+
+
+# ----------------- Bright Sky parsing -----------------
+def test_forecast_parses_brightsky(service, monkeypatch):
+    now = datetime.now(ts.BERLIN_TZ).replace(minute=0, second=0, microsecond=0)
+    hourly = []
+    for h in range(9 * 24):
+        dt = now + timedelta(hours=h)
+        hourly.append({
+            "timestamp": dt.isoformat(),
+            "temperature": 10 + (h % 24) / 2,
+            "precipitation": 1.0 if dt.hour == 12 else 0.0,
+            "wind_speed": 20,
+            "wind_gust_speed": 50 if dt.hour == 15 else None,
+            "precipitation_probability": 45 if dt.hour == 12 else None,
+            "condition": "rain" if dt.hour == 12 else "dry",
+            "icon": "rain" if dt.hour == 12 else "partly-cloudy-day",
+        })
+    responses = {
+        "/current_weather": {"weather": {
+            "temperature": 12.34, "wind_speed_10": 18.0, "wind_gust_speed_10": 70.0,
+            "wind_direction_10": 270, "precipitation_60": None, "pressure_msl": 1009.2,
+            "condition": "dry", "icon": "cloudy",
+        }},
+        "/weather?": {"weather": hourly},
+    }
+
+    async def fake_get_json(url, timeout=5):
+        return next(v for k, v in responses.items() if k in url)
+    monkeypatch.setattr(service, "_get_json", fake_get_json)
+
+    assert asyncio.run(service.fetch_forecast_live()) == "ok"
+    w = service.data["weather"]
+    assert w["temperature_c"] == 12.3
+    assert w["wind_direction"] == "W"
+    assert w["precipitation_mm"] == 0
+    assert w["air_pressure_hpa"] == 1009.2
+    assert w["warning_level"] == 3  # gusts > 65
+
+    assert len(service.data["forecast_24h"]) == 25
+    assert service.data["forecast_24h"][0]["time"] == now.strftime("%H:%M")
+
+    days = service.data["forecast_7days"]
+    assert len(days) == 7
+    assert days[0]["weekday"] == "Morgen"
+    assert days[0]["condition"] == "Regen"
+    assert days[0]["precipitation_sum"] == 1.0
+    assert days[0]["precipitation_prob"] == 45
+    assert days[0]["wind_gusts_kmh"] == 50
+    assert days[0]["warning_risk"] == "Erhöht"
+    assert "uv_index" not in days[0]
 
 
 # ----------------- WebSocket -----------------
