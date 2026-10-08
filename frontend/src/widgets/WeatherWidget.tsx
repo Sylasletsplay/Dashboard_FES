@@ -247,12 +247,12 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
         </div>
         <div className="shrink-0 h-10 flex flex-col justify-center px-3 pt-1 border-t border-slate-200 dark:border-slate-800/60">
           <a
-            href="https://open-meteo.com/"
+            href="https://www.dwd.de/opendata"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[11px] leading-tight text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 hover:underline"
           >
-            © Open-Meteo.com (CC BY 4.0), DWD-ICON-Modell
+            Datenbasis: Deutscher Wetterdienst (CC BY 4.0), via Bright Sky
           </a>
           <p className="text-[10px] leading-tight text-slate-400/80">
             Nur zu Informationszwecken – nicht für operative Wettereinsätze.
