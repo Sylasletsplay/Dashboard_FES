@@ -16,7 +16,7 @@ Das Dashboard ist als passives, ausfallsicheres Informationsdisplay (Read-Only) 
 3. **Präzises KatS-Wetter (DWD via Bright Sky):**
    - Das Dashboard ruft Messwerte und MOSMIX-Vorhersagen des Deutschen Wetterdienstes (DWD) über die kostenlose Bright Sky API ab.
    - Live-Sensorik: Aktuelle Windgeschwindigkeiten (inkl. Ben), Niederschlag (mm/h), Temperatur und Luftdruck.
-   - Unwetter-Warnstufe: Automatische bersetzung der DWD-Gefahrenstufen.
+   - Amtliche DWD-Warnungen: Die schwerste aktive Wetterwarnung des DWD für den Standort (Warnstufe 1-4) inkl. Gültigkeitsdauer.
 
 4. **7-Tage Lagevorschau:**
    - Ein Widget auf der rechten Seite zeigt eine bersichtliche Vorhersage der kommenden Woche.
