@@ -19,6 +19,9 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
   };
   const live = telemetry.weather;
   const forecast = telemetry.forecast_7days || [];
+  // The current weather source (Bright Sky / DWD) has no UV data - UV
+  // elements stay in the code but are only shown when values are present.
+  const hasUv = forecast[0]?.uv_index != null;
 
   // Limit forecast to exactly 7 days
   const next7Days = forecast.slice(0, 7);
@@ -88,7 +91,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className={`grid ${hasUv ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
               <div className="bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-start gap-2.5">
                 <CloudRain className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                 <div className="flex flex-col">
@@ -99,15 +102,17 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
                 </div>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-start gap-2.5">
-                <Sun className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-                <div className="flex flex-col">
-                  <span className="text-[14px] text-slate-500 leading-tight">UV-Index</span>
-                  <span className="text-lg font-bold font-mono text-slate-800 dark:text-slate-100 leading-tight mt-0.5">
-                    {forecast[0]?.uv_index ?? '-'} <span className="text-[14px] font-normal text-slate-500">Max</span>
-                  </span>
+              {hasUv && (
+                <div className="bg-white dark:bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-start gap-2.5">
+                  <Sun className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                  <div className="flex flex-col">
+                    <span className="text-[14px] text-slate-500 leading-tight">UV-Index</span>
+                    <span className="text-lg font-bold font-mono text-slate-800 dark:text-slate-100 leading-tight mt-0.5">
+                      {forecast[0]?.uv_index ?? '-'} <span className="text-[14px] font-normal text-slate-500">Max</span>
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {(() => {
@@ -238,11 +243,13 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
                     <strong className="font-bold">{day.wind_gusts_kmh ?? day.wind_speed_kmh ?? 0}</strong>
                     <span className="text-slate-500">km/h</span>
                   </span>
-                  <span className="flex items-center gap-1.5 text-[13px] text-slate-600 dark:text-slate-300 font-mono shrink-0">
-                    <Sun className="w-3 h-3 text-yellow-500" />
-                    <strong className="font-bold">{day.uv_index ?? '-'}</strong>
-                    <span className="text-slate-500">UV</span>
-                  </span>
+                  {day.uv_index != null && (
+                    <span className="flex items-center gap-1.5 text-[13px] text-slate-600 dark:text-slate-300 font-mono shrink-0">
+                      <Sun className="w-3 h-3 text-yellow-500" />
+                      <strong className="font-bold">{day.uv_index}</strong>
+                      <span className="text-slate-500">UV</span>
+                    </span>
+                  )}
                   <span className="flex items-center gap-1.5 text-[13px] text-slate-600 dark:text-slate-300 font-mono shrink-0">
                     <CloudRain className="w-3 h-3 text-blue-500" />
                     <strong className="font-bold">{day.precipitation_sum ?? 0}</strong>
