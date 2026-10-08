@@ -16,9 +16,21 @@ export interface WeatherTelemetry {
   wind_direction: string;
   precipitation_mm: number;
   air_pressure_hpa: number;
+  /** Highest active official DWD Warnstufe (0 = none, 1-4). */
   warning_level: number;
   warning_text: string;
+  /** false when the DWD warnings feed could not be fetched. */
+  warnings_available?: boolean;
+  warnings?: DwdWarning[];
   error?: string | null;
+}
+
+export interface DwdWarning {
+  level: number;
+  event: string;
+  headline: string;
+  onset: string | null;
+  expires: string | null;
 }
 
 export interface DayForecast {

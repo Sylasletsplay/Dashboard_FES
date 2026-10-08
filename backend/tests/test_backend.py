@@ -81,7 +81,7 @@ def test_auto_fetch_respects_cooldown(service, fake_urlopen):
     before = len(fake_urlopen.calls)
     assert asyncio.run(service.fetch_forecast_live()) == "ok"
     assert asyncio.run(service.fetch_forecast_live()) == "skipped"
-    assert len(fake_urlopen.calls) - before == 2  # current_weather + weather
+    assert len(fake_urlopen.calls) - before == 3  # current_weather + weather + alerts
 
 
 def test_429_backs_off_and_success_restores(service, fake_urlopen):
@@ -125,6 +125,16 @@ def test_forecast_parses_brightsky(service, monkeypatch):
             "condition": "dry", "icon": "cloudy",
         }},
         "/weather?": {"weather": hourly},
+        "/alerts": {"alerts": [
+            {"severity": "minor", "event_de": "WINDBÖEN", "headline_de": "Amtliche WARNUNG vor WINDBÖEN",
+             "onset": (now - timedelta(hours=1)).isoformat(), "expires": (now + timedelta(hours=5)).isoformat()},
+            {"severity": "severe", "event_de": "ORKANBÖEN", "headline_de": "Amtliche UNWETTERWARNUNG vor ORKANBÖEN",
+             "onset": (now - timedelta(hours=1)).isoformat(), "expires": None},
+            {"severity": "extreme", "event_de": "EXPIRED", "headline_de": "abgelaufen",
+             "onset": (now - timedelta(hours=5)).isoformat(), "expires": (now - timedelta(hours=1)).isoformat()},
+            {"severity": "extreme", "event_de": "FUTURE", "headline_de": "später",
+             "onset": (now + timedelta(hours=5)).isoformat(), "expires": None},
+        ]},
     }
 
     async def fake_get_json(url, timeout=5):
@@ -137,7 +147,11 @@ def test_forecast_parses_brightsky(service, monkeypatch):
     assert w["wind_direction"] == "W"
     assert w["precipitation_mm"] == 0
     assert w["air_pressure_hpa"] == 1009.2
-    assert w["warning_level"] == 3  # gusts > 65
+    # Official DWD warnings: only currently active ones count, most severe first
+    assert w["warning_level"] == 3
+    assert w["warning_text"] == "Amtliche UNWETTERWARNUNG vor ORKANBÖEN (+1 weitere)"
+    assert w["warnings_available"] is True
+    assert [a["event"] for a in w["warnings"]] == ["ORKANBÖEN", "WINDBÖEN"]
 
     assert len(service.data["forecast_24h"]) == 25
     assert service.data["forecast_24h"][0]["time"] == now.strftime("%H:%M")
@@ -151,6 +165,26 @@ def test_forecast_parses_brightsky(service, monkeypatch):
     assert days[0]["wind_gusts_kmh"] == 50
     assert days[0]["warning_risk"] == "Erhöht"
     assert "uv_index" not in days[0]
+
+
+def test_warnings_feed_failure_is_not_reported_as_no_warning(service, monkeypatch):
+    async def fake_get_json(url, timeout=5):
+        if "/alerts" in url:
+            raise OSError("timeout")
+        return {"weather": {"temperature": 5} if "/current_weather" in url else []}
+    monkeypatch.setattr(service, "_get_json", fake_get_json)
+
+    assert asyncio.run(service.fetch_forecast_live()) == "ok"
+    w = service.data["weather"]
+    assert w["temperature_c"] == 5
+    assert w["warnings_available"] is False
+    assert w["warning_text"] == "DWD-Warnungen derzeit nicht abrufbar."
+
+
+def test_no_active_warnings():
+    out = ts._official_warnings([], datetime.now(ts.BERLIN_TZ))
+    assert out["warning_level"] == 0
+    assert out["warning_text"] == "Keine amtlichen Wetterwarnungen des DWD."
 
 
 # ----------------- WebSocket -----------------

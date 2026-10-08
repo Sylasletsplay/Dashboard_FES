@@ -57,6 +57,42 @@ def _wind_dir(deg) -> str:
     return dirs[int((deg / 22.5) + .5) % 16]
 
 
+# DWD warning severity (CAP) -> official DWD Warnstufe 1-4.
+_SEVERITY_LEVEL = {"minor": 1, "moderate": 2, "severe": 3, "extreme": 4}
+
+
+def _official_warnings(alerts: list, now: datetime) -> Dict[str, Any]:
+    """Currently active official DWD warnings for the location, most severe first."""
+    active = []
+    for alert in alerts:
+        try:
+            onset = datetime.fromisoformat(alert["onset"]) if alert.get("onset") else None
+            expires = datetime.fromisoformat(alert["expires"]) if alert.get("expires") else None
+        except (TypeError, ValueError):
+            onset = expires = None
+        if (onset and onset > now) or (expires and expires <= now):
+            continue
+        active.append({
+            "level": _SEVERITY_LEVEL.get(alert.get("severity"), 1),
+            "event": alert.get("event_de") or "",
+            "headline": alert.get("headline_de") or alert.get("event_de") or "Wetterwarnung",
+            "onset": alert.get("onset"),
+            "expires": alert.get("expires"),
+        })
+    active.sort(key=lambda a: a["level"], reverse=True)
+    if not active:
+        text = "Keine amtlichen Wetterwarnungen des DWD."
+    else:
+        text = active[0]["headline"]
+        if len(active) > 1:
+            text += f" (+{len(active) - 1} weitere)"
+    return {
+        "warning_level": active[0]["level"] if active else 0,
+        "warning_text": text,
+        "warnings_available": True,
+        "warnings": active,
+    }
+
 # Default AUTO refresh cadences (seconds). A 429 temporarily raises the active
 # cooldown to RATE_LIMIT_BACKOFF; the next successful fetch restores these.
 # FORECAST: 600s (10 min) keeps live weather fresh (2 Bright Sky calls per fetch).
@@ -181,38 +217,37 @@ class TelemetryService:
             first_date = now.date().isoformat()
             last_date = (now + timedelta(days=8)).date().isoformat()
             base = f"lat={self.lat}&lon={self.lon}&tz=Europe%2FBerlin"
-            current_raw, hourly_raw = await asyncio.gather(
+            current_raw, hourly_raw, alerts_raw = await asyncio.gather(
                 self._get_json(f"{BRIGHTSKY_API}/current_weather?{base}"),
                 self._get_json(f"{BRIGHTSKY_API}/weather?{base}&date={first_date}&last_date={last_date}"),
+                self._get_json(f"{BRIGHTSKY_API}/alerts?lat={self.lat}&lon={self.lon}&tz=Europe%2FBerlin"),
+                return_exceptions=True,
             )
+            # Weather data is required; the warnings feed failing on its own
+            # only marks the warnings as unavailable (never as "no warnings").
+            for res in (current_raw, hourly_raw):
+                if isinstance(res, BaseException):
+                    raise res
             self.forecast_cooldown = FORECAST_COOLDOWN
 
             # Update current weather
             current = current_raw.get("weather") or {}
             if current:
-                cur_gusts = _num(current.get("wind_gust_speed_10"))
-                cur_precip = _num(current.get("precipitation_60"))
-                thunderstorm = current.get("condition") == "thunderstorm"
-
-                risk_level = 0
-                risk_text = "Keine Warnung"
-                if cur_gusts > 65 or thunderstorm or cur_precip > 25:
-                    risk_level = 3
-                    risk_text = "Akute Unwettergefahr"
-                elif cur_gusts > 45 or cur_precip > 10:
-                    risk_level = 1
-                    risk_text = "Erhöhte Gefahr"
-
                 self.data["weather"] = {
                     "temperature_c": round(_num(current.get("temperature")), 1),
                     "wind_speed_kmh": round(_num(current.get("wind_speed_10")), 1),
-                    "wind_gusts_kmh": round(cur_gusts, 1),
+                    "wind_gusts_kmh": round(_num(current.get("wind_gust_speed_10")), 1),
                     "wind_direction": _wind_dir(current.get("wind_direction_10")),
-                    "precipitation_mm": round(cur_precip, 1),
+                    "precipitation_mm": round(_num(current.get("precipitation_60")), 1),
                     "air_pressure_hpa": round(_num(current.get("pressure_msl"), 1013), 1),
-                    "warning_level": risk_level,
-                    "warning_text": risk_text
                 }
+            if isinstance(alerts_raw, BaseException):
+                print(f"Error fetching DWD warnings (Bright Sky): {alerts_raw}")
+                warnings = {"warning_level": 0, "warning_text": "DWD-Warnungen derzeit nicht abrufbar.",
+                            "warnings_available": False, "warnings": []}
+            else:
+                warnings = _official_warnings(alerts_raw.get("alerts") or [], now)
+            self.data["weather"] = {**self.data.get("weather", {}), **warnings}
 
             hours = []
             for rec in hourly_raw.get("weather") or []:

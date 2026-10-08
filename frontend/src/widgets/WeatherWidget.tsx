@@ -110,21 +110,38 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ telemetry, error, 
               </div>
             </div>
 
-            <div className={`p-2 rounded-lg border ${
-              live.warning_level >= 3 ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50' : 
-              live.warning_level >= 1 ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/50' : 
-              'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50'
-            }`}>
-              <span className="text-[15px] font-bold flex items-center gap-1.5 mb-0.5 text-slate-800 dark:text-slate-200">
-                <AlertTriangle className={`w-3.5 h-3.5 ${
-                  live.warning_level >= 3 ? 'text-red-500' : live.warning_level >= 1 ? 'text-amber-500' : 'text-emerald-500'
-                }`} /> 
-                Warnstufe {live.warning_level}
-              </span>
-              <p className="text-[13px] text-slate-600 dark:text-slate-300 leading-tight">
-                {live.warning_text !== "Keine Warnung" ? live.warning_text : "Keine amtlichen Wetterwarnungen des DWD."}
-              </p>
-            </div>
+            {(() => {
+              // Official DWD colours: 1 yellow, 2 orange, 3 red, 4 violet
+              const unavailable = live.warnings_available === false;
+              const level = unavailable ? 0 : live.warning_level;
+              const box = unavailable ? 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800' :
+                level >= 4 ? 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-900/50' :
+                level >= 3 ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50' :
+                level >= 2 ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/50' :
+                level >= 1 ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900/50' :
+                'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50';
+              const icon = unavailable ? 'text-slate-400' :
+                level >= 4 ? 'text-purple-500' : level >= 3 ? 'text-red-500' :
+                level >= 2 ? 'text-orange-500' : level >= 1 ? 'text-yellow-500' : 'text-emerald-500';
+              const until = live.warnings?.[0]?.expires;
+              return (
+                <div
+                  className={`p-2 rounded-lg border ${box}`}
+                  title={live.warnings?.map(w => w.headline).join('\n') || undefined}
+                >
+                  <span className="text-[15px] font-bold flex items-center gap-1.5 mb-0.5 text-slate-800 dark:text-slate-200">
+                    <AlertTriangle className={`w-3.5 h-3.5 ${icon}`} />
+                    {unavailable ? 'DWD-Warnungen' : level > 0 ? `DWD-Warnstufe ${level}` : 'Keine DWD-Warnung'}
+                  </span>
+                  <p className="text-[13px] text-slate-600 dark:text-slate-300 leading-tight">
+                    {live.warning_text}
+                    {level > 0 && until && (
+                      <span className="text-slate-500"> – bis {new Date(until).toLocaleString('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                    )}
+                  </p>
+                </div>
+              );
+            })()}
 
             {/* 24h Hourly Forecast */}
             {telemetry.forecast_24h && telemetry.forecast_24h.length > 0 && (
