@@ -129,7 +129,10 @@ http://localhost:5173
 ```
 
 Oben in der Kopfzeile zeigt der Status **LIVE**, sobald die Echtzeit-Verbindung zum
-Backend besteht. Zum Beenden: in beiden Terminals `Strg + C`.
+Backend besteht. Daneben steht der Zeitstempel des letzten Datenstands; über das
+Symbol rechts oben lässt sich zwischen hellem und dunklem Anzeigen wechseln.
+Jedes der drei Anzeigefelder hat zudem einen Knopf, mit dem die Daten
+manuell neu geladen werden können. Zum Beenden: in beiden Terminals `Strg + C`.
 
 ---
 
@@ -138,6 +141,9 @@ Backend besteht. Zum Beenden: in beiden Terminals `Strg + C`.
 * **Seite lädt, aber Status „OFFLINE".** – Läuft das Backend unter Port `8000`?
   Frontend und Backend müssen **gleichzeitig** laufen.
 * **`run.bat` wird blockiert.** – Methode B verwenden.
+* **Start schlägt fehl, weil der Port schon belegt ist.** – Eine frühere
+  Instanz des Dashboards läuft noch. Die alten Terminalfenster (Backend und
+  Frontend) schließen und neu starten.
 * **`python` bzw. `npm` wird nicht erkannt.** – Die Programme wurden ohne
   „Add to PATH" installiert. Terminal neu öffnen; ggf. Installation mit „Add to PATH"
   wiederholen.
