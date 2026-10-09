@@ -9,10 +9,10 @@ Die offizielle API des Bundes fr Binnenwasserstraen.
 - **Historische Messwerte (24h):** `https://pegelonline.wsv.de/webservices/rest-api/v2/stations/{uuid}/W/measurements.json?start=P1D`
   - Liefert die Wasserstnde der letzten 24 Stunden. Daraus generiert das Backend die Tendenzen (Delta 1h) und das Frontend die Trend-Graphen.
 
-## 2. Open-Meteo Geocoding API
-Kostenlose Geocoding-API, die Stdteteinamen in Koordinaten bersetzt.
+## 2. Open-Meteo Geocoding API (nicht mehr im Einsatz)
+Die Geocoding-API übersetzt Städtenamen in Koordinaten. Das Dashboard nutzt sie derzeit **nicht**: Der Standort (Berlin) ist fest hinterlegt. Die Dokumentation bleibt zur Referenz, falls künftig mehrere Standorte unterstützt werden sollen.
 - **Endpoint:** `https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=de`
-- **Zweck:** Notwendig, da Pegelonline und Wetter-APIs lngengrad-/Breitengrad-basiert arbeiten.
+- **Zweck:** Notwendig, da Pegelonline und Wetter-APIs längengrad-/breitengrad-basiert arbeiten.
 
 ## 3. Bright Sky (DWD-Wetterdaten)
 Kostenlose JSON-API für die offenen Daten des Deutschen Wetterdienstes (DWD): Messwerte der SYNOP-Stationen und MOSMIX-Stationsvorhersagen (ca. 10 Tage). Kein API-Key, kein IP-basiertes Tageslimit - ersetzt Open-Meteo, dessen Limit (10.000 Aufrufe/Tag pro IP) auf der geteilten IP des Hosters regelmäßig von anderen Kunden aufgebraucht wurde.

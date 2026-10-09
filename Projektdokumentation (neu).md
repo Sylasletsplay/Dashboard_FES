@@ -172,9 +172,10 @@ Das Dashboard zeigt drei Fachbereiche nebeneinander an:
   und die Wahl des **Trend-Zeitraums** sind möglich.
 * **Einsatzdaten der Feuerwehr** (mitte): Gesamtzahl der Einsätze des Vortags sowie
   ein farbiges Einsatzspektrum (Fläche = Anteil an Einsätzen).
-* **Wetter** (rechts): Aktuelle Wetterwerte, eine stündliche Prognose für die nächsten
-  24 Stunden und eine Prognose für die **kommenden sieben Tage** (ohne den heutigen
-  Tag).
+* **Wetter** (rechts): Aktuelle Wetterwerte, die aktuellen amtlichen
+  DWD-Warnungen (Warnstufe in den Originalfarben des DWD), eine stündliche
+  Prognose für die nächsten 24 Stunden und eine Prognose für die **kommenden
+  sieben Tage** (ohne den heutigen Tag).
 
 ### 5.2 Live-Anzeige
 Oben in der Kopfzeile steht der Zeitstempel des letzten Datenstands sowie der
@@ -183,7 +184,7 @@ Aktualisieren angezeigt.
 
 ### 5.3 Interaktion
 * **Aufklappen:** Einen Tageintrag in der Prognose anklicken, um Details (Wind,
-  UV-Index, Niederschlag, Warnrisiko) zu sehen. Ein zweites Klicken schließt ihn.
+  Niederschlag, Warnrisiko) zu sehen. Ein zweites Klicken schließt ihn.
 * **Stündliche Prognose:** Über die kleinen Pfeil-Buttons links und rechts lässt sich
   die Zeitleiste durchblättern.
 * **Trend-Zeitraum (Wasserstände):** Über die Zeitleiste-Schalter (1 / 3 / 6 / 12 / 24 h)
@@ -193,10 +194,10 @@ Aktualisieren angezeigt.
   Langfristverlauf. Die Auswahl wird gespeichert.
 * **Heller/dunkler Modus:** Kleiner Schalter (Sonne/Mond) rechts in der Kopfzeile.
 * **Manuelle Aktualisierung:** Jeder Fachbereich hat oben einen kleinen
-  Aktualisierungspfeil, der die jeweilige Datenquelle gezielt neu lädt.
-* **API-Budget-Anzeige:** Im Status-Widget wird der Verbrauch der Wetter-API
-  (Open-Meteo) live ausgegeben – Kosten pro Abfrage, verbrauchtes Tageskontingent,
-  verbleibende manuelle Aktualisierungen und die errechenbare Laufzeit.
+  Aktualisierungspfeil, der die jeweilige Datenquelle gezielt neu lädt. Der
+  Knopf zeigt kurz an, ob die Aktualisierung geklappt hat, zu früh war
+  (maximal eine manuelle Anfrage pro Quelle alle 30 Sekunden) oder fehlgeschlagen
+  ist.
 
 ### 5.4 Anzeige auf unterschiedlichen Bildschirmen
 Das Dashboard skaliert sich automatisch an die Bildschirmgröße an. Auf großen
@@ -212,7 +213,7 @@ direkt an der jeweiligen Anzeige kenntlich gemacht:
 
 | Fachbereich   | Quelle                                   | Lizenz        |
 |---------------|------------------------------------------|---------------|
-| Wetter        | Open-Meteo.com (DWD-ICON-Modell)         | CC BY 4.0     |
+| Wetter        | Bright Sky (DWD Open Data: SYNOP/MOSMIX) | CC BY 4.0     |
 | Einsatzdaten  | Berliner Feuerwehr, BF-Open-Data         | CC BY 4.0     |
 | Pegelstände   | WSV – Pegelonline                        | (WSV)         |
 
@@ -240,9 +241,8 @@ Ein anderes Programm nutzt den Port. Häufige Ursache: Eine alte Instanz läuft 
 Die alten Terminals schließen und neu starten.
 
 **Keine Live-Daten, aber die Seite lädt.**
-Die externen Quellen sind ggf. gerade nicht erreichbar oder das Abfrage-Kontingent ist
-kurzzeitig aufgebraucht. Das Dashboard zeigt dann einen dezenten Hinweis und holt die
-Daten automatisch in einer späteren Runde nach.
+Die externen Quellen sind ggf. gerade nicht erreichbar. Das Dashboard zeigt dann einen
+dezenten Hinweis und holt die Daten automatisch in einer späteren Runde nach.
 
 ---
 
@@ -254,10 +254,8 @@ Daten automatisch in einer späteren Runde nach.
   * Node-Bibliotheken: siehe `frontend/package.json`.
 * **Ports:** Backend 8000 (API + WebSockets), Frontend 5173 (Entwicklung).
 * **Abfrage-Strategie:** Ruhemodus ohne Nutzer und service-spezifische Abklingzeiten
-  (Wetter 10 min, Pegel 5 min, Einsatzdaten 1 h).
-* **API-Budget-Messung:** Ein eigener Zähler (`backend/services/openmeteo_budget.py`)
-  erfasst den Verbrauch der Open-Meteo-API gegen das Gratis-Kontingent (10.000 Aufrufe
-  pro Tag pro IP) und liefert die Kennzahlen für die Budget-Anzeige.
+  (Wetter 10 min, Pegel 5 min, Einsatzdaten 1 h). Manuelle Refreshes sind pro
+  Quelle auf maximal eine Anfrage alle 30 s begrenzt.
 * **Trend-Berechnung Pegel:** Die Tendenz wird als lineare Regression (geringste
   Quadrate) über den gewählten Zeitraum (1–24 h) aus den 15-Minuten-Messungen
   berechnet, statt über eine einfache Zwei-Punkt-Differenz – dadurch werden die

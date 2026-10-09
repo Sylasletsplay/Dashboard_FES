@@ -93,13 +93,11 @@ def _official_warnings(alerts: list, now: datetime) -> Dict[str, Any]:
         "warnings": active,
     }
 
-# Default AUTO refresh cadences (seconds). A 429 temporarily raises the active
-# cooldown to RATE_LIMIT_BACKOFF; the next successful fetch restores these.
-# FORECAST: 600s (10 min) keeps live weather fresh (2 Bright Sky calls per fetch).
+# Default AUTO refresh cadences (seconds).
+# FORECAST: 600s (10 min) keeps live weather fresh (3 Bright Sky calls per fetch).
 FORECAST_COOLDOWN = 600
 PEGEL_COOLDOWN = 300
 FIRE_COOLDOWN = 3600
-RATE_LIMIT_BACKOFF = 3600
 
 # Minimum gap between two manual (forced) refreshes of the same feed. Manual
 # refreshes skip the auto cooldown, and /ws is public, so without this a
@@ -115,16 +113,6 @@ def _fetch_allowed(last_fetch: float, cooldown: float, force: bool) -> bool:
 def manual_refresh_retry_in(last_fetch: float) -> int:
     """Seconds until a manual refresh of a feed fetched at `last_fetch` is allowed."""
     return max(0, math.ceil(MANUAL_REFRESH_MIN_GAP - (time.time() - last_fetch)))
-
-
-def _log_rate_limited(source: str, e: Exception):
-    """Print the body of a 429 response - it names which limit was hit
-    (e.g. Open-Meteo: "Daily API request limit exceeded")."""
-    try:
-        body = e.read().decode("utf-8", errors="replace")
-    except Exception:
-        body = "<no body>"
-    print(f"{source} rate limited (429), backing off {RATE_LIMIT_BACKOFF}s. Response: {body}")
 
 
 def _pegel_trend_map(values: list) -> Dict[str, str]:
@@ -166,7 +154,7 @@ class TelemetryService:
         self._manual_trigger = asyncio.Event()
         self.get_active_clients = None
 
-        # Active AUTO refresh cadences (raised on 429, restored on success).
+        # Active AUTO refresh cadences.
         self.forecast_cooldown = FORECAST_COOLDOWN
         self.pegel_cooldown = PEGEL_COOLDOWN
         self.fire_cooldown = FIRE_COOLDOWN
@@ -228,7 +216,6 @@ class TelemetryService:
             for res in (current_raw, hourly_raw):
                 if isinstance(res, BaseException):
                     raise res
-            self.forecast_cooldown = FORECAST_COOLDOWN
 
             # Update current weather
             current = current_raw.get("weather") or {}
@@ -320,9 +307,6 @@ class TelemetryService:
                 })
             self.data["forecast_7days"] = forecast_list
         except Exception as e:
-            if getattr(e, "code", None) == 429:
-                self.forecast_cooldown = RATE_LIMIT_BACKOFF
-                _log_rate_limited("Bright Sky (DWD)", e)
             if "weather" not in self.data:
                 self.data["weather"] = {}
             self.data["weather"]["error"] = str(e)
@@ -393,11 +377,7 @@ class TelemetryService:
         self._last_pegel_fetch = time.time()
         try:
             await self._fetch_pegel_live_inner()
-            self.pegel_cooldown = PEGEL_COOLDOWN
         except Exception as e:
-            if getattr(e, "code", None) == 429:
-                self.pegel_cooldown = RATE_LIMIT_BACKOFF
-                _log_rate_limited("Pegelonline", e)
             self.data["water_levels_error"] = str(e)
             print(f"Error fetching Pegel: {e}")
             return "error"
@@ -448,8 +428,6 @@ class TelemetryService:
                         "history": history
                     })
             except Exception as e:
-                if getattr(e, "code", None) == 429:
-                    raise
                 print(f"Error fetching Pegel {station['name']}: {e}")
 
         if updated_list:
@@ -468,7 +446,6 @@ class TelemetryService:
                 None,
                 lambda: urllib.request.urlopen(req, context=self.ssl_ctx, timeout=4).read()
             )
-            self.fire_cooldown = FIRE_COOLDOWN
 
             decoded = res_bytes.decode("utf-8").strip().split('\n')
             if len(decoded) > 1:
@@ -537,9 +514,6 @@ class TelemetryService:
                 self.data["hauptbeschwerden"] = daily_hauptbeschwerden
 
         except Exception as e:
-            if getattr(e, "code", None) == 429:
-                self.fire_cooldown = RATE_LIMIT_BACKOFF
-                _log_rate_limited("Fire data API", e)
             self.data["fire_data_error"] = str(e)
             print(f"Error fetching fire data: {e}")
             return "error"

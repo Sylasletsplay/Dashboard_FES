@@ -2,7 +2,6 @@ import asyncio
 import io
 import os
 import sys
-import urllib.error
 import urllib.request
 from datetime import datetime, timedelta
 
@@ -19,17 +18,12 @@ from services.telemetry_service import _pegel_trend_map
 
 @pytest.fixture
 def fake_urlopen(monkeypatch):
-    """Replace all outgoing HTTP calls. Set `.status` to 429 to simulate rate limiting."""
+    """Replace all outgoing HTTP calls."""
     class Fake:
-        status = 200
         calls = []
 
         def __call__(self, req, **kwargs):
             self.calls.append(req.full_url)
-            if self.status == 429:
-                raise urllib.error.HTTPError(
-                    req.full_url, 429, "Too Many Requests", {},
-                    io.BytesIO(b'{"reason":"Daily API request limit exceeded."}'))
             return io.BytesIO(b"[]" if "pegelonline" in req.full_url else b"{}")
 
     fake = Fake()
@@ -76,23 +70,12 @@ def test_trend_map_too_little_data():
     assert _pegel_trend_map([5])["1"] == "0 cm"
 
 
-# ----------------- Cooldowns & rate limiting -----------------
+# ----------------- Cooldowns -----------------
 def test_auto_fetch_respects_cooldown(service, fake_urlopen):
     before = len(fake_urlopen.calls)
     assert asyncio.run(service.fetch_forecast_live()) == "ok"
     assert asyncio.run(service.fetch_forecast_live()) == "skipped"
     assert len(fake_urlopen.calls) - before == 3  # current_weather + weather + alerts
-
-
-def test_429_backs_off_and_success_restores(service, fake_urlopen):
-    fake_urlopen.status = 429
-    assert asyncio.run(service.fetch_forecast_live()) == "error"
-    assert service.forecast_cooldown == ts.RATE_LIMIT_BACKOFF
-
-    fake_urlopen.status = 200
-    service._last_forecast_fetch -= ts.MANUAL_REFRESH_MIN_GAP + 1
-    assert asyncio.run(service.fetch_forecast_live(force=True)) == "ok"
-    assert service.forecast_cooldown == ts.FORECAST_COOLDOWN
 
 
 def test_manual_refresh_min_gap(service):

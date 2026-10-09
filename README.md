@@ -148,6 +148,5 @@ manuell neu geladen werden können. Zum Beenden: in beiden Terminals `Strg + C`.
   „Add to PATH" installiert. Terminal neu öffnen; ggf. Installation mit „Add to PATH"
   wiederholen.
 * **Keine Live-Daten, Seite lädt aber.** – Die externen Quellen sind ggf. kurz
-  nicht erreichbar oder ihr Abfrage-Kontingent ist vorübergehend aufgebraucht. Das
-  Dashboard zeigt dann einen dezenten Hinweis und holt die Daten automatisch in der
-  nächsten Runde nach.
+  nicht erreichbar. Das Dashboard zeigt dann einen dezenten Hinweis und holt die
+  Daten automatisch in der nächsten Runde nach.
